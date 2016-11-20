@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 2.8.9)
+
+add_library(Geometry SHARED
+    _Library.h
+    Point2d.h
+    Point2d.cpp
+    Utils.h
+    Utils.cpp
+)
+target_compile_definitions(Geometry PRIVATE GEOMETRY_LIBRARY)
