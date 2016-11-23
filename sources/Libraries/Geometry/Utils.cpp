@@ -1,5 +1,18 @@
 #include "Utils.h"
 
+#include <algorithm>
+#include <iterator>
+
+namespace
+{
+    bool _IsPointInsideBoundingBox(const Geometry::Point2d& i_point, const std::pair<Geometry::Point2d, Geometry::Point2d>& i_bounding_box)
+    {
+        return
+            i_bounding_box.first.GetX() <= i_point.GetX() && i_point.GetX() <= i_bounding_box.second.GetX() &&
+            i_bounding_box.first.GetY() <= i_point.GetY() && i_point.GetY() <= i_bounding_box.second.GetY();
+    }
+}
+
 namespace Geometry
 {
     std::pair<Point2d, Point2d> GetPointsBoundaries(const std::vector<Point2d>& i_points)
@@ -20,5 +33,14 @@ namespace Geometry
         }
 
         return std::make_pair(pt_min, pt_max);
+    }
+
+    std::vector<Point2d> FilterPointsByBoundingBox(const std::vector<Point2d>& i_points, const std::pair<Point2d, Point2d>& i_bounding_box)
+    {
+        std::vector<Point2d> filtered_points;
+        
+        std::copy_if(i_points.begin(), i_points.end(), std::back_inserter(filtered_points), [&i_bounding_box](const Point2d& i_point) {return _IsPointInsideBoundingBox(i_point, i_bounding_box); });
+
+        return filtered_points;
     }
 }

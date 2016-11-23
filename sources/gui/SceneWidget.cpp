@@ -1,32 +1,74 @@
 #include "SceneWidget.h"
 
+#include "../Libraries/Geometry/Point2d.h"
 #include "../Libraries/Geometry/Utils.h"
 
 #include <QPainter>
+#include <QWheelEvent>
+
+#include <iostream>
+#include <string>
 
 using Geometry::Point2d;
 
 namespace
 {
     const std::vector<Point2d> g_points = {
-        Point2d(1., 1.), Point2d(1., 2.), Point2d(2., 2.)
+        Point2d(1., 1.), Point2d(1., 2.), Point2d(2., 2.), Point2d(3., 1.)
     };
 
     const size_t g_margin = 10;
     const size_t g_point_radius = 3;
+
+    const double g_zoom_factor = 0.1;
+
+    void _OutputPoint(const std::string& i_description, const Geometry::Point2d& i_point)
+    {
+        std::cout << i_description << ": [" << i_point.GetX() << "; " << i_point.GetY() << "]." << std::endl;
+    }
 }
+
+class SceneWidget::_Scene
+{
+public:
+    _Scene()
+        : m_points(g_points)
+        , m_bounding_box(Geometry::GetPointsBoundaries(m_points))
+    {
+    }
+
+    const std::vector<Geometry::Point2d>& GetPoints() const
+    {
+        return m_points;
+    }
+
+    std::pair<Geometry::Point2d, Geometry::Point2d> GetBoundingBox() const
+    {
+        return m_bounding_box;
+    }
+
+private:
+    std::vector<Geometry::Point2d> m_points;
+    std::pair<Geometry::Point2d, Geometry::Point2d> m_bounding_box;
+};
+
 
 SceneWidget::SceneWidget(QWidget* ip_parent)
     : QWidget(ip_parent)
-    , m_points(g_points)
+    , mp_scene(std::make_unique<_Scene>())
+    , m_current_region(mp_scene->GetBoundingBox())
 {
     setStyleSheet("background-color: white");
 }
 
 void SceneWidget::paintEvent(QPaintEvent* ip_event)
 {
-    auto points_to_draw = m_points;
-    auto points_boundaries = Geometry::GetPointsBoundaries(points_to_draw);
+    auto points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPoints(), m_current_region);
+    if (points_to_draw.empty())
+        return;
+
+    //auto points_boundaries = Geometry::GetPointsBoundaries(points_to_draw);
+    auto points_boundaries = m_current_region;
 
     for (auto& pt : points_to_draw)
     {
@@ -66,3 +108,53 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
         painter.drawEllipse(QPoint(pt.GetX(), pt.GetY()), g_point_radius, g_point_radius);
 }
 
+void SceneWidget::wheelEvent(QWheelEvent* ip_event)
+{
+    std::cout << "Wheel event. Delta = " << ip_event->delta() << std::endl;
+    if (ip_event->delta() > 0)
+        _ZoomIn();
+    else
+        _ZoomOut();
+}
+
+void SceneWidget::_ExpandCurrentRegion(double i_dx, double i_dy)
+{
+    m_current_region.first.SetX(m_current_region.first.GetX() - i_dx / 2);
+    m_current_region.second.SetX(m_current_region.second.GetX() + i_dx / 2);
+    m_current_region.first.SetY(m_current_region.first.GetY() - i_dy / 2);
+    m_current_region.second.SetY(m_current_region.second.GetY() + i_dy / 2);
+}
+
+void SceneWidget::_ShrinkCurrentRegion(double i_dx, double i_dy)
+{
+    m_current_region.first.SetX(m_current_region.first.GetX() + i_dx / 2);
+    m_current_region.second.SetX(m_current_region.second.GetX() - i_dx / 2);
+    m_current_region.first.SetY(m_current_region.first.GetY() + i_dy / 2);
+    m_current_region.second.SetY(m_current_region.second.GetY() - i_dy / 2);
+}
+
+void SceneWidget::_ZoomIn()
+{
+    const auto bbox = mp_scene->GetBoundingBox();
+    const auto zoom_dx = (bbox.second.GetX() - bbox.first.GetX()) * g_zoom_factor;
+    const auto zoom_dy = (bbox.second.GetY() - bbox.first.GetY()) * g_zoom_factor;
+    _ShrinkCurrentRegion(zoom_dx, zoom_dy);
+    
+    _OutputPoint("Current region min", m_current_region.first);
+    _OutputPoint("Current region max", m_current_region.second);
+
+    update();
+}
+
+void SceneWidget::_ZoomOut()
+{
+    const auto bbox = mp_scene->GetBoundingBox();
+    const auto zoom_dx = (bbox.second.GetX() - bbox.first.GetX()) * g_zoom_factor;
+    const auto zoom_dy = (bbox.second.GetY() - bbox.first.GetY()) * g_zoom_factor;
+    _ExpandCurrentRegion(zoom_dx, zoom_dy);
+    
+    _OutputPoint("Current region min", m_current_region.first);
+    _OutputPoint("Current region max", m_current_region.second);
+
+    update();
+}
