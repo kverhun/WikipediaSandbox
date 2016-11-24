@@ -15,6 +15,10 @@ namespace Geometry
         double GetY() const;
         void SetY(double i_y);
 
+        Point2d& operator += (const Point2d& i_other);
+        Point2d& operator -= (const Point2d& i_other);
+        Point2d operator-() const;
+
     private:
         double m_x;
         double m_y;
