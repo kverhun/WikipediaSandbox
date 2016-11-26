@@ -124,6 +124,11 @@ void SceneWidget::wheelEvent(QWheelEvent* ip_event)
         _ZoomOut();
 }
 
+void SceneWidget::mousePressEvent(QMouseEvent* ip_event)
+{
+    mouseMoveEvent(ip_event);
+}
+
 void SceneWidget::mouseMoveEvent(QMouseEvent* ip_event)
 {
     int pos_x = ip_event->pos().x();

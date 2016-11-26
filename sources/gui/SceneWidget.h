@@ -19,6 +19,7 @@ public:
 private:
     void paintEvent(QPaintEvent* ip_event) override;
     void wheelEvent(QWheelEvent* ip_event) override;
+    void mousePressEvent(QMouseEvent* ip_event) override;
     void mouseMoveEvent(QMouseEvent* ip_event) override;
 
     void _ZoomIn();
