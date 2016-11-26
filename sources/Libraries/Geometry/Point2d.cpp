@@ -26,3 +26,20 @@ void Point2d::SetY(double i_y)
 {
     m_y = i_y;
 }
+
+Point2d& Point2d::operator+=(const Point2d& i_other)
+{
+    m_x += i_other.m_x;
+    m_y += i_other.m_y;
+    return *this;
+}
+
+Point2d& Point2d::operator-=(const Point2d& i_other)
+{
+    return (*this) += (-i_other);
+}
+
+Point2d Point2d::operator-() const
+{
+    return Point2d(-m_x, -m_y);
+}
