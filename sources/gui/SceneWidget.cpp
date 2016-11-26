@@ -26,6 +26,7 @@ namespace
     {
         std::cout << i_description << ": [" << i_point.GetX() << "; " << i_point.GetY() << "]." << std::endl;
     }
+
 }
 
 class SceneWidget::_Scene
@@ -61,6 +62,7 @@ SceneWidget::SceneWidget(QWidget* ip_parent)
     setStyleSheet(
         "border: 1px solid black;"
         "background-color: white;");
+    _ZoomOut();
 }
 
 void SceneWidget::SetMouseMoveMessageDelegate(SceneWidget::TMessageDelegate i_message_delegate)
@@ -77,42 +79,17 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
     //auto points_boundaries = Geometry::GetPointsBoundaries(points_to_draw);
     auto points_boundaries = m_current_region;
 
-    for (auto& pt : points_to_draw)
-    {
-        pt.SetX(pt.GetX() - points_boundaries.first.GetX());
-        pt.SetY(pt.GetY() - points_boundaries.first.GetY());
-    }
+    std::vector<QPoint> points_to_draw_screen;
+    points_to_draw.reserve(points_to_draw.size());
 
-    Point2d widget_size{
-        static_cast<double>(width()) - 2 * g_margin, 
-        static_cast<double>(height()) - 2 * g_margin
-    };
-
-    auto dx = points_boundaries.second.GetX() - points_boundaries.first.GetX();
-    auto dy = points_boundaries.second.GetY() - points_boundaries.first.GetY();
-    
-    auto scale = std::max(
-        dx / widget_size.GetX(),
-        dy / widget_size.GetY()
-        );
-
-    for (auto& pt : points_to_draw)
-    {
-        pt.SetX(pt.GetX() / scale);
-        pt.SetY(pt.GetY() / scale);
-    }
-
-    for (auto& pt : points_to_draw)
-    {
-        pt.SetX(pt.GetX() + g_margin);
-        pt.SetY(pt.GetY() + g_margin);
-    }
+    for (const auto& pt : points_to_draw)
+        points_to_draw_screen.push_back(_TransformPointFromWorldToWidget(pt));
 
     QPainter painter(this);
     painter.setBrush(Qt::blue);
 
-    for (const auto& pt : points_to_draw)
-        painter.drawEllipse(QPoint(pt.GetX(), pt.GetY()), g_point_radius, g_point_radius);
+    for (const auto& pt : points_to_draw_screen)
+        painter.drawEllipse(pt, g_point_radius, g_point_radius);
 }
 
 void SceneWidget::wheelEvent(QWheelEvent* ip_event)
@@ -136,7 +113,9 @@ void SceneWidget::mouseMoveEvent(QMouseEvent* ip_event)
     
     if (m_message_delegate)
     {
-        std::string msg = "Window coors: [" + std::to_string(pos_x) + "; " + std::to_string(pos_y) + "]";
+        auto world_point = _TransformPointFromWidgetToWorld(ip_event->pos());
+        std::string msg = "Window coors: [" + std::to_string(pos_x) + "; " + std::to_string(pos_y) + "], " 
+            + "World coords: [" + std::to_string(world_point.GetX()) + "; " + std::to_string(world_point.GetY()) + "]";
         m_message_delegate(msg);
     }
 }
@@ -181,4 +160,34 @@ void SceneWidget::_ZoomOut()
     _OutputPoint("Current region max", m_current_region.second);
 
     update();
+}
+
+
+Geometry::Point2d SceneWidget::_TransformPointFromWidgetToWorld(const QPoint& i_point) const
+{
+    auto scene_to_world_matrix = _GetTransformMatrixFromSceneToWorld();
+    Geometry::Point2d point_to_transform(static_cast<double>(i_point.x()), static_cast<double>(i_point.y()));
+    auto transformed_point = scene_to_world_matrix.PreMultiply(point_to_transform);
+    Geometry::Point2d shift(m_current_region.first.GetX(), m_current_region.second.GetY());
+    transformed_point += shift;
+    return transformed_point;
+}
+
+QPoint SceneWidget::_TransformPointFromWorldToWidget(const Geometry::Point2d& i_point) const
+{
+    auto world_to_widget_matrix = _GetTransformMatrixFromSceneToWorld().Inverse();
+
+    Geometry::Point2d shift(m_current_region.first.GetX(), m_current_region.second.GetY());
+
+    auto res = world_to_widget_matrix.PreMultiply(i_point - shift);
+    return QPoint(static_cast<int>(res.GetX()), static_cast<int>(res.GetY()));
+}
+
+Geometry::Matrix2d SceneWidget::_GetTransformMatrixFromSceneToWorld() const
+{
+    double a11 = (m_current_region.second.GetX() - m_current_region.first.GetX())  / size().width();
+    double a22 = -(m_current_region.second.GetY() - m_current_region.first.GetY()) / size().height();
+
+    return Geometry::Matrix2d(a11, 0, 0, a22);
+
 }

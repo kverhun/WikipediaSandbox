@@ -7,6 +7,12 @@ Point2d::Point2d(double i_x, double i_y)
     , m_y(i_y)
 { }
 
+Point2d::Point2d(const Point2d& i_other)
+{
+    m_x = i_other.m_x;
+    m_y = i_other.m_y;
+}
+
 double Point2d::GetX() const
 {
     return m_x;
@@ -25,6 +31,17 @@ double Point2d::GetY() const
 void Point2d::SetY(double i_y)
 {
     m_y = i_y;
+}
+
+Point2d Point2d::operator+(const Point2d& i_other) const
+{
+    Point2d point(*this);
+    return point += i_other;
+}
+
+Point2d Point2d::operator-(const Point2d& i_other) const
+{
+    return (*this) + (-i_other);
 }
 
 Point2d& Point2d::operator+=(const Point2d& i_other)

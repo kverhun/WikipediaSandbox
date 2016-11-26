@@ -4,6 +4,8 @@ add_library(Geometry SHARED
     _Library.h
     Point2d.h
     Point2d.cpp
+    Matrix2d.h
+    Matrix2d.cpp
     Utils.h
     Utils.cpp
 )
