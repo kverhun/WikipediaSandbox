@@ -63,6 +63,11 @@ SceneWidget::SceneWidget(QWidget* ip_parent)
         "background-color: white;");
 }
 
+void SceneWidget::SetMouseMoveMessageDelegate(SceneWidget::TMessageDelegate i_message_delegate)
+{
+    m_message_delegate = i_message_delegate;
+}
+
 void SceneWidget::paintEvent(QPaintEvent* ip_event)
 {
     auto points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPoints(), m_current_region);
@@ -117,6 +122,18 @@ void SceneWidget::wheelEvent(QWheelEvent* ip_event)
         _ZoomIn();
     else
         _ZoomOut();
+}
+
+void SceneWidget::mouseMoveEvent(QMouseEvent* ip_event)
+{
+    int pos_x = ip_event->pos().x();
+    int pos_y = ip_event->pos().y();
+    
+    if (m_message_delegate)
+    {
+        std::string msg = "Window coors: [" + std::to_string(pos_x) + "; " + std::to_string(pos_y) + "]";
+        m_message_delegate(msg);
+    }
 }
 
 void SceneWidget::_ExpandCurrentRegion(double i_dx, double i_dy)

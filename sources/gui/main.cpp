@@ -6,6 +6,7 @@
 #include <QMainWindow>
 #include <QLayout>
 #include <QStatusBar>
+#include <QString>
 
 int main(int i_argc, char** i_argv)
 {
@@ -15,10 +16,13 @@ int main(int i_argc, char** i_argv)
     QMainWindow wnd;
     wnd.setContentsMargins(5, 5, 5, 5);
 
-    wnd.setCentralWidget(new SceneWidget(&wnd));
+    auto* p_scene_widget = new SceneWidget(&wnd);
+
+    wnd.setCentralWidget(p_scene_widget);
 
     auto* p_status_bar = new QStatusBar;
-    p_status_bar->showMessage("test message");
+    p_scene_widget->SetMouseMoveMessageDelegate([p_status_bar](const std::string& i_message) {p_status_bar->showMessage(QString::fromStdString(i_message)); });
+
     wnd.setStatusBar(p_status_bar);
 
     wnd.show();
