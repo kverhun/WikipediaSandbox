@@ -26,7 +26,6 @@ namespace
     {
         std::cout << i_description << ": [" << i_point.GetX() << "; " << i_point.GetY() << "]." << std::endl;
     }
-
 }
 
 class SceneWidget::_Scene
@@ -75,9 +74,6 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
     auto points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPoints(), m_current_region);
     if (points_to_draw.empty())
         return;
-
-    //auto points_boundaries = Geometry::GetPointsBoundaries(points_to_draw);
-    auto points_boundaries = m_current_region;
 
     std::vector<QPoint> points_to_draw_screen;
     points_to_draw.reserve(points_to_draw.size());
@@ -176,9 +172,7 @@ Geometry::Point2d SceneWidget::_TransformPointFromWidgetToWorld(const QPoint& i_
 QPoint SceneWidget::_TransformPointFromWorldToWidget(const Geometry::Point2d& i_point) const
 {
     auto world_to_widget_matrix = _GetTransformMatrixFromSceneToWorld().Inverse();
-
     Geometry::Point2d shift(m_current_region.first.GetX(), m_current_region.second.GetY());
-
     auto res = world_to_widget_matrix.PreMultiply(i_point - shift);
     return QPoint(static_cast<int>(res.GetX()), static_cast<int>(res.GetY()));
 }
@@ -187,7 +181,5 @@ Geometry::Matrix2d SceneWidget::_GetTransformMatrixFromSceneToWorld() const
 {
     double a11 = (m_current_region.second.GetX() - m_current_region.first.GetX())  / size().width();
     double a22 = -(m_current_region.second.GetY() - m_current_region.first.GetY()) / size().height();
-
     return Geometry::Matrix2d(a11, 0, 0, a22);
-
 }
