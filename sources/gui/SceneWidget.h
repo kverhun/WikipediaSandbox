@@ -21,6 +21,7 @@ private:
     void paintEvent(QPaintEvent* ip_event) override;
     void wheelEvent(QWheelEvent* ip_event) override;
     void mousePressEvent(QMouseEvent* ip_event) override;
+    void mouseReleaseEvent(QMouseEvent* ip_event) override;
     void mouseMoveEvent(QMouseEvent* ip_event) override;
 
     void _ZoomIn();
@@ -35,6 +36,9 @@ private:
 private:
     class _Scene;
     std::unique_ptr<_Scene> mp_scene;
+
+    class _Panner;
+    std::unique_ptr<_Panner> mp_panner;
 
     std::pair<Geometry::Point2d, Geometry::Point2d> m_current_region;
 

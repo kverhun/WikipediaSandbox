@@ -53,6 +53,31 @@ private:
 };
 
 
+class SceneWidget::_Panner
+{
+public:
+    _Panner(const QPoint& i_start_point_screen)
+        : m_current_point(i_start_point_screen)
+    { }
+
+    ~_Panner()
+    {
+    
+    }
+
+    QPoint MoveAndGetDelta(const QPoint& i_new_point)
+    {
+        QPoint delta = m_current_point - i_new_point;
+        m_current_point = i_new_point;
+        return delta;
+    }
+
+private:
+    QPoint m_current_point;
+
+};
+
+
 SceneWidget::SceneWidget(QWidget* ip_parent)
     : QWidget(ip_parent)
     , mp_scene(std::make_unique<_Scene>())
@@ -102,6 +127,12 @@ void SceneWidget::mousePressEvent(QMouseEvent* ip_event)
     mouseMoveEvent(ip_event);
 }
 
+void SceneWidget::mouseReleaseEvent(QMouseEvent* ip_event)
+{
+    if (mp_panner)
+        mp_panner.reset();
+}
+
 void SceneWidget::mouseMoveEvent(QMouseEvent* ip_event)
 {
     int pos_x = ip_event->pos().x();
@@ -114,6 +145,31 @@ void SceneWidget::mouseMoveEvent(QMouseEvent* ip_event)
             + "World coords: [" + std::to_string(world_point.GetX()) + "; " + std::to_string(world_point.GetY()) + "]";
         m_message_delegate(msg);
     }
+
+    bool pan = (ip_event->buttons() == Qt::LeftButton);
+    if (pan)
+    {
+        if (mp_panner)
+        {
+            auto delta_screen = mp_panner->MoveAndGetDelta(ip_event->pos());
+            auto delta_world = _TransformPointFromWidgetToWorld(delta_screen);
+            auto zero_world = _TransformPointFromWidgetToWorld(QPoint(0, 0));
+            std::cout << "Pan" << std::endl;
+            std::cout << "Delta screen: " << delta_screen.x() << "; " << delta_screen.y() << std::endl;
+            _OutputPoint("delta_world", delta_world);
+
+            m_current_region.first += (delta_world - zero_world);
+            m_current_region.second += (delta_world - zero_world);
+
+            _OutputPoint("Current region min", m_current_region.first);
+            _OutputPoint("Current region max", m_current_region.second);
+
+            update();
+        }
+        else
+            mp_panner = std::make_unique<_Panner>(ip_event->pos());
+    }
+
 }
 
 void SceneWidget::_ExpandCurrentRegion(double i_dx, double i_dy)
