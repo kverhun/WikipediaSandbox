@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QMainWindow>
 #include <QLayout>
+#include <QStatusBar>
 
 int main(int i_argc, char** i_argv)
 {
@@ -15,6 +16,11 @@ int main(int i_argc, char** i_argv)
     wnd.setContentsMargins(5, 5, 5, 5);
 
     wnd.setCentralWidget(new SceneWidget(&wnd));
+
+    auto* p_status_bar = new QStatusBar;
+    p_status_bar->showMessage("test message");
+    wnd.setStatusBar(p_status_bar);
+
     wnd.show();
 
     auto exit_code = app.exec();

@@ -58,7 +58,9 @@ SceneWidget::SceneWidget(QWidget* ip_parent)
     , mp_scene(std::make_unique<_Scene>())
     , m_current_region(mp_scene->GetBoundingBox())
 {
-    setStyleSheet("background-color: white");
+    setStyleSheet(
+        "border: 1px solid black;"
+        "background-color: white;");
 }
 
 void SceneWidget::paintEvent(QPaintEvent* ip_event)
