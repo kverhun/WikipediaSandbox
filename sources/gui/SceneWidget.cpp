@@ -56,6 +56,20 @@ public:
         return m_points;
     }
 
+    std::vector<std::pair<Point2d, Point2d>> GetSegments() const
+    {
+        std::vector<std::pair<Point2d, Point2d>> segments;
+
+        for (const auto& edge : m_graph.GetEdges())
+        {
+            Point2d pt_from(m_graph_on_plane.at(edge.first));
+            Point2d pt_to(m_graph_on_plane.at(edge.second));
+            segments.emplace_back(pt_from, pt_to);
+        }
+
+        return segments;
+    }
+
     std::pair<Geometry::Point2d, Geometry::Point2d> GetBoundingBox() const
     {
         return m_bounding_box;
@@ -112,21 +126,32 @@ void SceneWidget::SetMouseMoveMessageDelegate(SceneWidget::TMessageDelegate i_me
 
 void SceneWidget::paintEvent(QPaintEvent* ip_event)
 {
-    auto points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPoints(), m_current_region);
-    if (points_to_draw.empty())
-        return;
-
-    std::vector<QPoint> points_to_draw_screen;
-    points_to_draw.reserve(points_to_draw.size());
-
-    for (const auto& pt : points_to_draw)
-        points_to_draw_screen.push_back(_TransformPointFromWorldToWidget(pt));
-
     QPainter painter(this);
-    painter.setBrush(Qt::blue);
+    
+    auto points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPoints(), m_current_region);
+    if (!points_to_draw.empty())
+    {
 
-    for (const auto& pt : points_to_draw_screen)
-        painter.drawEllipse(pt, g_point_radius, g_point_radius);
+        std::vector<QPoint> points_to_draw_screen;
+        points_to_draw.reserve(points_to_draw.size());
+
+        for (const auto& pt : points_to_draw)
+            points_to_draw_screen.push_back(_TransformPointFromWorldToWidget(pt));
+
+        painter.setBrush(Qt::blue);
+
+        for (const auto& pt : points_to_draw_screen)
+            painter.drawEllipse(pt, g_point_radius, g_point_radius);
+    }
+
+    std::vector<std::pair<QPoint, QPoint>> m_segments_to_draw_screen;
+    auto segments = mp_scene->GetSegments();
+    for (const auto& segment : segments)
+        m_segments_to_draw_screen.emplace_back(_TransformPointFromWorldToWidget(segment.first), _TransformPointFromWorldToWidget(segment.second));
+ 
+    painter.setBrush(Qt::red);
+    for (const auto& segment : m_segments_to_draw_screen)
+        painter.drawLine(segment.first, segment.second);
 }
 
 void SceneWidget::wheelEvent(QWheelEvent* ip_event)
