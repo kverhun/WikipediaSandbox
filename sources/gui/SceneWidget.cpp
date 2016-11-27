@@ -3,6 +3,8 @@
 #include "../Libraries/Geometry/Point2d.h"
 #include "../Libraries/Geometry/Utils.h"
 
+#include "../Libraries/Graphs/Graph.h"
+
 #include <QPainter>
 #include <QWheelEvent>
 
@@ -17,6 +19,9 @@ namespace
         Point2d(1., 1.), Point2d(1., 2.), Point2d(2., 2.), Point2d(3., 1.)
     };
 
+    const Graphs::Graph g_graph({ 1, 2, 3, 4 }, { {1, 2}, {1, 3}, {2, 4} });
+    const std::map<Graphs::Graph::TVertex, Point2d> g_graph_on_plane{ { 1, Point2d(1., 1.) }, { 2, Point2d(1., 2.) }, { 3, Point2d(2., 2.) }, {4, Point2d(3., 1.) } };
+
     const size_t g_margin = 10;
     const size_t g_point_radius = 3;
 
@@ -26,16 +31,25 @@ namespace
     {
         std::cout << i_description << ": [" << i_point.GetX() << "; " << i_point.GetY() << "]." << std::endl;
     }
+
+    template<typename K, typename V>
+    std::vector<V> _RetrieveMapValues(const std::map<K, V>& i_map)
+    {
+        std::vector<V> result;
+        std::transform(i_map.begin(), i_map.end(), std::back_inserter(result), [&i_map](const std::pair<K,V>& i_el) {return i_el.second; });
+        return std::move(result);
+    }
 }
 
 class SceneWidget::_Scene
 {
 public:
     _Scene()
-        : m_points(g_points)
+        : m_graph(g_graph)
+        , m_graph_on_plane(g_graph_on_plane)
+        , m_points(_RetrieveMapValues(m_graph_on_plane))
         , m_bounding_box(Geometry::GetPointsBoundaries(m_points))
-    {
-    }
+    { }
 
     const std::vector<Geometry::Point2d>& GetPoints() const
     {
@@ -48,6 +62,8 @@ public:
     }
 
 private:
+    Graphs::Graph m_graph;
+    std::map<Graphs::Graph::TVertex, Point2d> m_graph_on_plane;
     std::vector<Geometry::Point2d> m_points;
     std::pair<Geometry::Point2d, Geometry::Point2d> m_bounding_box;
 };
