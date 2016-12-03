@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <random>
 
 namespace
 {
@@ -42,5 +43,24 @@ namespace Geometry
         std::copy_if(i_points.begin(), i_points.end(), std::back_inserter(filtered_points), [&i_bounding_box](const Point2d& i_point) {return _IsPointInsideBoundingBox(i_point, i_bounding_box); });
 
         return filtered_points;
+    }
+
+    std::vector<Point2d> GenerateRandomPoints(size_t i_number, int i_xfrom, int i_yfrom, int i_xto, int i_yto)
+    {
+        std::vector<Point2d> points;
+
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> x_distr(i_xfrom, i_xto);
+        std::uniform_int_distribution<> y_distr(i_yfrom, i_yto);
+
+        for (size_t i = 0; i < i_number; ++i)
+        {
+            int x = x_distr(rd);
+            int y = y_distr(rd);
+            points.push_back(Point2d(x, y));
+        }
+
+        return points;
     }
 }

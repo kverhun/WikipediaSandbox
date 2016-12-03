@@ -4,6 +4,7 @@
 #include "../Libraries/Geometry/Utils.h"
 
 #include "../Libraries/Graphs/Graph.h"
+#include "../Libraries/Graphs/GraphGenerator.h"
 
 #include <QPainter>
 #include <QWheelEvent>
@@ -27,6 +28,20 @@ namespace
 
     const double g_zoom_factor = 0.1;
 
+    std::map<Graphs::Graph::TVertex, Point2d> _GenerateRandomGraphPoints(const Graphs::Graph& i_graph)
+    {
+        std::map<Graphs::Graph::TVertex, Point2d> res;
+        std::vector<Point2d> random_points = Geometry::GenerateRandomPoints(i_graph.GetVertices().size(), -100, -100, 100, 100);
+        for (size_t i = 0; i < random_points.size(); ++i)
+        {
+            res.insert(std::make_pair(i_graph.GetVertices()[i], random_points[i]));
+        }
+        return res;
+    }
+
+    const std::unique_ptr<Graphs::Graph> gp_random_graph = Graphs::GenerateGraph(20);
+    const std::map<Graphs::Graph::TVertex, Point2d> g_random_graph_map = _GenerateRandomGraphPoints(*gp_random_graph.get());
+
     void _OutputPoint(const std::string& i_description, const Geometry::Point2d& i_point)
     {
         std::cout << i_description << ": [" << i_point.GetX() << "; " << i_point.GetY() << "]." << std::endl;
@@ -45,8 +60,8 @@ class SceneWidget::_Scene
 {
 public:
     _Scene()
-        : m_graph(g_graph)
-        , m_graph_on_plane(g_graph_on_plane)
+        : m_graph(*gp_random_graph.get())
+        , m_graph_on_plane(g_random_graph_map)
         , m_points(_RetrieveMapValues(m_graph_on_plane))
         , m_bounding_box(Geometry::GetPointsBoundaries(m_points))
     { }
