@@ -1,7 +1,9 @@
 #include "GraphGenerator.h"
 #include "Graph.h"
 
+#include <algorithm>
 #include <random>
+#include <iostream>
 
 using namespace Graphs;
 
@@ -18,8 +20,10 @@ std::unique_ptr<Graph> Graphs::GenerateGraph(size_t i_vertex_number)
     for (size_t i = 0; i < i_vertex_number; ++i)
     {
         std::uniform_int_distribution<> vertex_id_distribution(i, i_vertex_number-1);
-        std::uniform_int_distribution<> number_of_connection_distribution(0, i_vertex_number-1);
+        std::uniform_int_distribution<> number_of_connection_distribution(0, 5
+            /*std::min(i_vertex_number - 1, size_t{ 25 })*/);
         int vertex_number = number_of_connection_distribution(rd);
+        //std::cout << "vertex number " << vertex_number << std::endl;
         for (int connection = 0; connection  < vertex_number; ++connection)
         {
             int vertex_to = vertex_id_distribution(rd);

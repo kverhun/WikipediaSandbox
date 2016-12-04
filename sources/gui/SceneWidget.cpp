@@ -24,14 +24,14 @@ namespace
     const std::map<Graphs::Graph::TVertex, Point2d> g_graph_on_plane{ { 1, Point2d(1., 1.) }, { 2, Point2d(1., 2.) }, { 3, Point2d(2., 2.) }, {4, Point2d(3., 1.) } };
 
     const size_t g_margin = 10;
-    const size_t g_point_radius = 3;
+    const size_t g_point_radius = 10;
 
     const double g_zoom_factor = 0.1;
 
     std::map<Graphs::Graph::TVertex, Point2d> _GenerateRandomGraphPoints(const Graphs::Graph& i_graph)
     {
         std::map<Graphs::Graph::TVertex, Point2d> res;
-        std::vector<Point2d> random_points = Geometry::GenerateRandomPoints(i_graph.GetVertices().size(), -100, -100, 100, 100);
+        std::vector<Point2d> random_points = Geometry::GenerateRandomPoints(i_graph.GetVertices().size(), -100000, -100000, 100000, 100000);
         for (size_t i = 0; i < random_points.size(); ++i)
         {
             res.insert(std::make_pair(i_graph.GetVertices()[i], random_points[i]));
@@ -39,7 +39,7 @@ namespace
         return res;
     }
 
-    const std::unique_ptr<Graphs::Graph> gp_random_graph = Graphs::GenerateGraph(20);
+    const std::unique_ptr<Graphs::Graph> gp_random_graph = Graphs::GenerateGraph(10000);
     const std::map<Graphs::Graph::TVertex, Point2d> g_random_graph_map = _GenerateRandomGraphPoints(*gp_random_graph.get());
 
     void _OutputPoint(const std::string& i_description, const Geometry::Point2d& i_point)
@@ -164,7 +164,7 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
     for (const auto& segment : segments)
         m_segments_to_draw_screen.emplace_back(_TransformPointFromWorldToWidget(segment.first), _TransformPointFromWorldToWidget(segment.second));
  
-    painter.setBrush(Qt::red);
+    painter.setPen(Qt::red);
     for (const auto& segment : m_segments_to_draw_screen)
         painter.drawLine(segment.first, segment.second);
 }
