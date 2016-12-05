@@ -19,3 +19,4 @@ qt5_use_modules(WikipediaSandboxGUI Widgets)
 
 target_link_libraries(WikipediaSandboxGUI Geometry)
 target_link_libraries(WikipediaSandboxGUI Graphs)
+target_link_libraries(WikipediaSandboxGUI GraphsIO)

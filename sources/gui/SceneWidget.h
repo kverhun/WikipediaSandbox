@@ -3,6 +3,9 @@
 #include "../Libraries/Geometry/Point2d.h"
 #include "../Libraries/Geometry/Matrix2d.h"
 
+#include "../Libraries/Graphs/Graph.h"
+#include "../Libraries/Graphs/Topology.h"
+
 #include <memory>
 #include <functional>
 #include <string>
@@ -12,7 +15,7 @@
 class SceneWidget : public QWidget
 {
 public:
-    SceneWidget(QWidget* ip_parent);
+    SceneWidget(QWidget* ip_parent, std::shared_ptr<Graphs::Graph> ip_graph, std::shared_ptr<Graphs::TGraphTopology> ip_topology);
 
     using TMessageDelegate = std::function<void(const std::string&)>;
     void SetMouseMoveMessageDelegate(TMessageDelegate i_message_delegate);

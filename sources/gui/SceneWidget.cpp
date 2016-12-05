@@ -59,10 +59,10 @@ namespace
 class SceneWidget::_Scene
 {
 public:
-    _Scene()
-        : m_graph(*gp_random_graph.get())
-        , m_graph_on_plane(g_random_graph_map)
-        , m_points(_RetrieveMapValues(m_graph_on_plane))
+    _Scene(std::shared_ptr<Graphs::Graph> ip_graph, std::shared_ptr<Graphs::TGraphTopology> ip_topology)
+        : mp_graph(ip_graph)
+        , mp_graph_topology(ip_topology)
+        , m_points(_RetrieveMapValues(*ip_topology.get()))
         , m_bounding_box(Geometry::GetPointsBoundaries(m_points))
     { }
 
@@ -75,10 +75,10 @@ public:
     {
         std::vector<std::pair<Point2d, Point2d>> segments;
 
-        for (const auto& edge : m_graph.GetEdges())
+        for (const auto& edge : mp_graph->GetEdges())
         {
-            Point2d pt_from(m_graph_on_plane.at(edge.first));
-            Point2d pt_to(m_graph_on_plane.at(edge.second));
+            Point2d pt_from(mp_graph_topology->at(edge.first));
+            Point2d pt_to(mp_graph_topology->at(edge.second));
             segments.emplace_back(pt_from, pt_to);
         }
 
@@ -91,8 +91,8 @@ public:
     }
 
 private:
-    Graphs::Graph m_graph;
-    std::map<Graphs::Graph::TVertex, Point2d> m_graph_on_plane;
+    std::shared_ptr<Graphs::Graph> mp_graph;
+    std::shared_ptr<Graphs::TGraphTopology> mp_graph_topology;
     std::vector<Geometry::Point2d> m_points;
     std::pair<Geometry::Point2d, Geometry::Point2d> m_bounding_box;
 };
@@ -123,9 +123,9 @@ private:
 };
 
 
-SceneWidget::SceneWidget(QWidget* ip_parent)
+SceneWidget::SceneWidget(QWidget* ip_parent, std::shared_ptr<Graphs::Graph> ip_graph, std::shared_ptr<Graphs::TGraphTopology> ip_topology)
     : QWidget(ip_parent)
-    , mp_scene(std::make_unique<_Scene>())
+    , mp_scene(std::make_unique<_Scene>(ip_graph, ip_topology))
     , m_current_region(mp_scene->GetBoundingBox())
 {
     setStyleSheet(

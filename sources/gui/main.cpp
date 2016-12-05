@@ -1,12 +1,40 @@
 #include "SceneWidget.h"
 
+#include "../Libraries/Graphs/Graph.h"
+#include "../Libraries/GraphsIO/GraphIO.h"
+
 #include <iostream>
+#include <fstream>
 
 #include <QApplication>
 #include <QMainWindow>
 #include <QLayout>
 #include <QStatusBar>
 #include <QString>
+
+namespace
+{
+    const std::string g_graph_file_name = "Graph.csv";
+    const std::string g_topology_file_name = "Topology.csv";
+
+    std::shared_ptr<Graphs::Graph> _ReadGraphFromFile(const std::string& i_directory_name)
+    {
+        const std::string graph_full_file_name = i_directory_name + "/" + g_graph_file_name;
+
+        std::ifstream input_file_stream(graph_full_file_name);
+        auto p_graph = GraphsIO::ReadGraphFromStream(input_file_stream);
+        return std::shared_ptr<Graphs::Graph>(p_graph.release());
+    }
+
+    std::shared_ptr<Graphs::TGraphTopology> _ReadTopologyFromFile(const std::string& i_directory_name)
+    {
+        const std::string topology_full_file_name = i_directory_name + "/" + g_topology_file_name;
+        std::ifstream input_file_stream(topology_full_file_name);
+
+        return std::make_shared<Graphs::TGraphTopology>(GraphsIO::ReadGraphTopologyFromStream(input_file_stream));
+
+    }
+}
 
 int main(int i_argc, char** i_argv)
 {
@@ -16,7 +44,14 @@ int main(int i_argc, char** i_argv)
     QMainWindow wnd;
     wnd.setContentsMargins(5, 5, 5, 5);
 
-    auto* p_scene_widget = new SceneWidget(&wnd);
+    if (i_argc < 2)
+        return 1;
+
+    std::string directory_name(i_argv[1]);
+    auto p_graph = _ReadGraphFromFile(directory_name);
+    auto p_topology = _ReadTopologyFromFile(directory_name);
+
+    auto* p_scene_widget = new SceneWidget(&wnd, p_graph, p_topology);
 
     wnd.setCentralWidget(p_scene_widget);
 
