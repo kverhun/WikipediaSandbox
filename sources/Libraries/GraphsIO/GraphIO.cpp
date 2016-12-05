@@ -10,14 +10,25 @@ namespace
 {
     const std::string g_id_regex = "([0-9]+,)+([0-9]+)";
 
-    std::vector<Graph::TVertex> _ParseLine(const std::string& i_line)
+    std::vector<std::string> _Tokenize(const std::string& i_line, const char i_delimiter = ',')
     {
-        std::vector<Graph::TVertex> res;
+        std::vector<std::string> res;
 
         std::stringstream ss(i_line);
         std::string item;
         while (std::getline(ss, item, ','))
-            res.push_back(std::stoi(item));
+            res.push_back(item);
+
+        return res;
+    }
+
+    std::vector<Graph::TVertex> _ParseLine(const std::string& i_line)
+    {
+        std::vector<Graph::TVertex> res;
+
+        auto tokens = _Tokenize(i_line);
+        for (const auto& t : tokens)
+            res.push_back(std::stoi(t));
 
         return res;
     }
