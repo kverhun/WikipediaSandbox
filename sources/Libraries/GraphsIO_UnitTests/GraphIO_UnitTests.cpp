@@ -24,7 +24,7 @@ namespace
     }
 }
 
-TEST_CASE("Test")
+TEST_CASE("TestGraphRead")
 {
     SECTION("TestReadGraph_1")
     {
@@ -83,5 +83,45 @@ TEST_CASE("Test")
         _RequireEdgePresence({ 2, 3 }, graph_edges);
         _RequireEdgePresence({ 4, 3 }, graph_edges);
 
+    }
+}
+
+using Geometry::Point2d;
+
+namespace
+{
+    void _RequireEqualTopology(const Graphs::TGraphTopology& i_expected, const Graphs::TGraphTopology& i_actual)
+    {
+        for (const auto& expected : i_expected)
+            REQUIRE(std::find_if(i_actual.begin(), i_actual.end(), 
+                [&](const std::pair<Graph::TVertex, Geometry::Point2d>& i_val) 
+                {
+                    return i_val.first == expected.first
+                        && i_val.second.GetX() == expected.second.GetX()
+                        && i_val.second.GetY() == expected.second.GetY();
+                }) != i_actual.end());
+        for (const auto& actual : i_actual)
+            REQUIRE(std::find_if(i_expected.begin(), i_expected.end(), [&](const std::pair<Graph::TVertex, Geometry::Point2d>& i_val)
+                {
+                    return i_val.first == actual.first
+                        && i_val.second.GetX() == actual.second.GetX()
+                        && i_val.second.GetY() == actual.second.GetY();
+                }) != i_expected.end());
+    }
+}
+
+TEST_CASE("TestGraphTopologyRead")
+{
+    SECTION("TestGraphTopologyRead1")
+    {
+        std::istringstream stream(
+            R"(1,1,1
+            2,2,2
+            3,2,1
+            4,1,2)");
+
+        auto graph_topology_actual = GraphsIO::ReadGraphTopologyFromStream(stream);
+        Graphs::TGraphTopology graph_topology_expected = { {1, {1,1}}, {2,{2,2}}, {3, {2,1}}, {4, {1,2}} };
+        _RequireEqualTopology(graph_topology_expected, graph_topology_actual);
     }
 }

@@ -7,3 +7,4 @@ add_library(GraphsIO SHARED
 )
 target_compile_definitions(GraphsIO PRIVATE GRAPHSIO_LIBRARY)
 target_link_libraries(GraphsIO Graphs)
+target_link_libraries(GraphsIO Geometry)

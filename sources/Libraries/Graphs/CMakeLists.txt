@@ -6,5 +6,6 @@ add_library(Graphs SHARED
     Graph.cpp
     GraphGenerator.h
     GraphGenerator.cpp
+    Topology.h
 )
 target_compile_definitions(Graphs PRIVATE GRAPHS_LIBRARY)
