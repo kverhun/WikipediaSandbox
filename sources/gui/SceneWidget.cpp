@@ -13,6 +13,7 @@
 #include <string>
 
 using Geometry::Point2d;
+using Graphs::Graph;
 
 namespace
 {
@@ -54,6 +55,7 @@ namespace
         std::transform(i_map.begin(), i_map.end(), std::back_inserter(result), [&i_map](const std::pair<K,V>& i_el) {return i_el.second; });
         return std::move(result);
     }
+
 }
 
 class SceneWidget::_Scene
@@ -69,6 +71,11 @@ public:
     const std::vector<Geometry::Point2d>& GetPoints() const
     {
         return m_points;
+    }
+
+    const Graphs::TGraphTopology& GetTopology() const
+    {
+        return *mp_graph_topology.get();
     }
 
     std::vector<std::pair<Point2d, Point2d>> GetSegments() const
@@ -95,25 +102,78 @@ public:
         return m_bounding_box;
     }
 
-    void SetPickedPoints(const std::vector<Geometry::Point2d>& i_points)
+    void SetPickedVertices(const Graph::TVertices& i_vertices)
     {
-        m_picked_points = i_points;
+        m_picked_vertexes = i_vertices;
+        m_highlighted_vertexes.clear();
+        m_highlighted_edges.clear();
+
+        if (!m_picked_vertexes.empty())
+        { 
+            m_highlighted_edges = mp_graph->GetEdgesFromVertex(m_picked_vertexes.front());
+            for (const auto& e : m_highlighted_edges)
+                m_highlighted_vertexes.push_back(e.second);
+        }
+
+        if (!m_picked_vertexes.empty())
+        {
+            std::cout << "Pick: " << m_picked_vertexes.front() << std::endl;
+            std::cout << "Adjacent: ";
+            for (const auto& v : m_highlighted_vertexes)
+                std::cout << v << " ";
+            std::cout << std::endl;
+            std::cout << "Edges: ";
+            for (const auto& e : m_highlighted_edges)
+                std::cout << "[" << e.first << ", " << e.second << "]; ";
+            std::cout << std::endl;
+        }
+
+
     }
 
     const std::vector<Geometry::Point2d> GetPickedPoints() const
     {
-        return m_picked_points;
+        return _GetPointsForVertices(m_picked_vertexes);
+    }
+
+    const std::vector<Geometry::Point2d> GetHighlightedPoints() const
+    {
+        return _GetPointsForVertices(m_highlighted_vertexes);
+    }
+
+    std::vector<std::pair<Point2d, Point2d>> GetHighlightedSegments() const
+    {
+        std::vector<std::pair<Point2d, Point2d>> highlighted_segments;
+        if (m_picked_vertexes.empty())
+            return highlighted_segments;
+
+        auto point_from = mp_graph_topology->at(m_picked_vertexes.front());
+
+        for (const auto& e : m_highlighted_edges)
+            highlighted_segments.emplace_back(point_from, mp_graph_topology->at(e.second));
+
+        return highlighted_segments;
     }
 
 private:
+    std::vector<Geometry::Point2d> _GetPointsForVertices(const Graph::TVertices& i_vertices) const
+    {
+        std::vector<Geometry::Point2d> points;
+        for (auto v : i_vertices)
+            points.push_back(mp_graph_topology->at(v));
+        return points;
+    }
+
+private:
+
     std::shared_ptr<Graphs::Graph> mp_graph;
     std::shared_ptr<Graphs::TGraphTopology> mp_graph_topology;
     std::vector<Geometry::Point2d> m_points;
     std::pair<Geometry::Point2d, Geometry::Point2d> m_bounding_box;
 
-    std::vector<Geometry::Point2d> m_picked_points;
-    std::vector<Geometry::Point2d> m_points_to_highlight;
-    Graphs::Graph::TEdges m_edges_to_highlight;
+    Graph::TVertices m_picked_vertexes;
+    Graph::TVertices m_highlighted_vertexes;
+    Graphs::Graph::TEdges m_highlighted_edges;
 };
 
 
@@ -180,19 +240,28 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
     if (!points_to_draw.empty())
         draw_points_on_screen(points_to_draw, painter, Qt::blue);
 
-    std::vector<std::pair<QPoint, QPoint>> m_segments_to_draw_screen;
-    auto segments = mp_scene->GetSegments();
-    for (const auto& segment : segments)
-        m_segments_to_draw_screen.emplace_back(_TransformPointFromWorldToWidget(segment.first), _TransformPointFromWorldToWidget(segment.second));
- 
-    painter.setPen(Qt::red);
-    for (const auto& segment : m_segments_to_draw_screen)
-        painter.drawLine(segment.first, segment.second);
+    auto draw_segments_on_screen = [this](const std::vector<std::pair<Point2d, Point2d>>& i_segments, QPainter& io_painter, Qt::GlobalColor i_color)
+    {
+        std::vector<std::pair<QPoint, QPoint>> segments_to_draw_screen;
+        for (const auto& segment : i_segments)
+            segments_to_draw_screen.emplace_back(_TransformPointFromWorldToWidget(segment.first), _TransformPointFromWorldToWidget(segment.second));
 
+        io_painter.setPen(i_color);
+        for (const auto& segment : segments_to_draw_screen)
+            io_painter.drawLine(segment.first, segment.second);
+    };
+    draw_segments_on_screen(mp_scene->GetSegments(), painter, Qt::red);
 
     auto selected_points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPickedPoints(), m_current_region);
     if (!selected_points_to_draw.empty())
         draw_points_on_screen(selected_points_to_draw, painter, Qt::green);
+
+    auto highlighted_points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetHighlightedPoints(), m_current_region);
+    if (!highlighted_points_to_draw.empty())
+        draw_points_on_screen(highlighted_points_to_draw, painter, Qt::yellow);
+
+    auto highlighted_segments = mp_scene->GetHighlightedSegments();
+    draw_segments_on_screen(highlighted_segments, painter, Qt::yellow);
 
 }
 
@@ -218,10 +287,12 @@ void SceneWidget::mouseReleaseEvent(QMouseEvent* ip_event)
     auto screen_pos = ip_event->pos();
     auto world_pos = _TransformPointFromWidgetToWorld(screen_pos);
 
-    auto point_closest_to_pointer = *std::min_element(mp_scene->GetPoints().begin(), mp_scene->GetPoints().end(), [world_pos](const Point2d& i_point1, const Point2d& i_point2)
+    auto it_point_closest_to_pointer = std::min_element(mp_scene->GetTopology().begin(), mp_scene->GetTopology().end(), 
+        [world_pos](const std::pair<Graph::TVertex, Point2d>& i_entry1, const std::pair<Graph::TVertex, Point2d>& i_entry2)
     {
-        return Geometry::DistanceSquare(world_pos, i_point1) < Geometry::DistanceSquare(world_pos, i_point2);
+        return Geometry::DistanceSquare(world_pos, i_entry1.second) < Geometry::DistanceSquare(world_pos, i_entry2.second);
     });
+    auto point_closest_to_pointer = it_point_closest_to_pointer->second;
     
     auto radius_x_screen = QPoint(g_point_radius, 0);
     auto radius_x_world = _TransformPointFromWidgetToWorld(radius_x_screen) - _TransformPointFromWidgetToWorld(QPoint( 0,0 ));
@@ -244,9 +315,9 @@ void SceneWidget::mouseReleaseEvent(QMouseEvent* ip_event)
     }();
 
     if (picked)
-        mp_scene->SetPickedPoints({ point_closest_to_pointer });
+        mp_scene->SetPickedVertices({ it_point_closest_to_pointer->first });
     else
-        mp_scene->SetPickedPoints({});
+        mp_scene->SetPickedVertices({});
     
     update();
 }

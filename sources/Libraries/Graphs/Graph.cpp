@@ -16,3 +16,14 @@ const Graph::TEdges& Graph::GetEdges() const
 {
     return m_edges;
 }
+
+Graph::TEdges Graph::GetEdgesFromVertex(const Graph::TVertex& i_vertex) const
+{
+    Graph::TEdges edges;
+    for (const auto& edge : m_edges)
+    {
+        if (edge.first == i_vertex)
+            edges.push_back(edge);
+    }
+    return edges;
+}

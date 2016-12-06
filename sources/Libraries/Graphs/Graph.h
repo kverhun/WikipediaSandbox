@@ -19,6 +19,7 @@ namespace Graphs
         const TVertices& GetVertices() const;
         const TEdges&    GetEdges()    const;
 
+        TEdges           GetEdgesFromVertex(const TVertex& i_vertex) const;
     private:
         TVertices m_vertices;
         TEdges    m_edges;
