@@ -95,11 +95,25 @@ public:
         return m_bounding_box;
     }
 
+    void SetPickedPoints(const std::vector<Geometry::Point2d>& i_points)
+    {
+        m_picked_points = i_points;
+    }
+
+    const std::vector<Geometry::Point2d> GetPickedPoints() const
+    {
+        return m_picked_points;
+    }
+
 private:
     std::shared_ptr<Graphs::Graph> mp_graph;
     std::shared_ptr<Graphs::TGraphTopology> mp_graph_topology;
     std::vector<Geometry::Point2d> m_points;
     std::pair<Geometry::Point2d, Geometry::Point2d> m_bounding_box;
+
+    std::vector<Geometry::Point2d> m_picked_points;
+    std::vector<Geometry::Point2d> m_points_to_highlight;
+    Graphs::Graph::TEdges m_edges_to_highlight;
 };
 
 
@@ -148,21 +162,23 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
 {
     QPainter painter(this);
     
-    auto points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPoints(), m_current_region);
-    if (!points_to_draw.empty())
+    auto draw_points_on_screen = [this](const std::vector<Geometry::Point2d>& i_points_to_draw, QPainter& io_painter, Qt::GlobalColor i_color)
     {
-
         std::vector<QPoint> points_to_draw_screen;
-        points_to_draw.reserve(points_to_draw.size());
+        points_to_draw_screen.reserve(i_points_to_draw.size());
 
-        for (const auto& pt : points_to_draw)
+        for (const auto& pt : i_points_to_draw)
             points_to_draw_screen.push_back(_TransformPointFromWorldToWidget(pt));
 
-        painter.setBrush(Qt::blue);
+        io_painter.setBrush(i_color);
 
         for (const auto& pt : points_to_draw_screen)
-            painter.drawEllipse(pt, g_point_radius, g_point_radius);
-    }
+            io_painter.drawEllipse(pt, g_point_radius, g_point_radius);
+    };
+
+    auto points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPoints(), m_current_region);
+    if (!points_to_draw.empty())
+        draw_points_on_screen(points_to_draw, painter, Qt::blue);
 
     std::vector<std::pair<QPoint, QPoint>> m_segments_to_draw_screen;
     auto segments = mp_scene->GetSegments();
@@ -172,6 +188,12 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
     painter.setPen(Qt::red);
     for (const auto& segment : m_segments_to_draw_screen)
         painter.drawLine(segment.first, segment.second);
+
+
+    auto selected_points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPickedPoints(), m_current_region);
+    if (!selected_points_to_draw.empty())
+        draw_points_on_screen(selected_points_to_draw, painter, Qt::green);
+
 }
 
 void SceneWidget::wheelEvent(QWheelEvent* ip_event)
@@ -192,6 +214,41 @@ void SceneWidget::mouseReleaseEvent(QMouseEvent* ip_event)
 {
     if (mp_panner)
         mp_panner.reset();
+
+    auto screen_pos = ip_event->pos();
+    auto world_pos = _TransformPointFromWidgetToWorld(screen_pos);
+
+    auto point_closest_to_pointer = *std::min_element(mp_scene->GetPoints().begin(), mp_scene->GetPoints().end(), [world_pos](const Point2d& i_point1, const Point2d& i_point2)
+    {
+        return Geometry::DistanceSquare(world_pos, i_point1) < Geometry::DistanceSquare(world_pos, i_point2);
+    });
+    
+    auto radius_x_screen = QPoint(g_point_radius, 0);
+    auto radius_x_world = _TransformPointFromWidgetToWorld(radius_x_screen) - _TransformPointFromWidgetToWorld(QPoint( 0,0 ));
+
+    auto radius_y_screen = QPoint(0, g_point_radius);
+    auto radius_y_world = _TransformPointFromWidgetToWorld(radius_y_screen) - _TransformPointFromWidgetToWorld(QPoint( 0,0 ));
+
+    auto rx_world = std::sqrt(Geometry::DistanceSquare(Point2d{ 0,0 }, radius_x_world));
+    auto ry_world = std::sqrt(Geometry::DistanceSquare(Point2d{ 0,0 }, radius_y_world));
+
+    auto dx_world = point_closest_to_pointer.GetX() - world_pos.GetX();
+    auto dy_world = point_closest_to_pointer.GetY() - world_pos.GetY();
+
+    bool picked = [&]()
+    {
+        if (dx_world*dx_world / rx_world / rx_world + dy_world*dy_world / ry_world / ry_world <= 1)
+            return true;
+        else
+            return false;
+    }();
+
+    if (picked)
+        mp_scene->SetPickedPoints({ point_closest_to_pointer });
+    else
+        mp_scene->SetPickedPoints({});
+    
+    update();
 }
 
 void SceneWidget::mouseMoveEvent(QMouseEvent* ip_event)

@@ -63,4 +63,11 @@ namespace Geometry
 
         return points;
     }
+
+    double DistanceSquare(const Point2d& i_point1, const Point2d& i_point2)
+    {
+        auto dx = i_point1.GetX() - i_point2.GetX();
+        auto dy = i_point1.GetY() - i_point2.GetY();
+        return dx*dx + dy*dy;
+    }
 }
