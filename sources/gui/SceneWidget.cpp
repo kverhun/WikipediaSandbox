@@ -25,7 +25,6 @@ namespace
     const std::map<Graphs::Graph::TVertex, Point2d> g_graph_on_plane{ { 1, Point2d(1., 1.) }, { 2, Point2d(1., 2.) }, { 3, Point2d(2., 2.) }, {4, Point2d(3., 1.) } };
 
     const size_t g_margin = 10;
-    const size_t g_point_radius = 10;
 
     const double g_zoom_factor = 0.1;
 
@@ -56,6 +55,15 @@ namespace
         return std::move(result);
     }
 
+    const size_t g_point_radius = 7;
+    const size_t g_highlighted_point_radius = 10;
+
+    const QColor g_nodes_color(150, 150, 255, 96);
+    const QColor g_adjacent_node_color(119, 128, 255, 192);
+    const QColor g_picked_node_color(28, 43, 255, 236);
+
+    const QColor g_edge_color(255, 221, 221);
+    const QColor g_highlighted_edge_color(158, 55, 55);
 }
 
 class SceneWidget::_Scene
@@ -220,9 +228,8 @@ void SceneWidget::SetMouseMoveMessageDelegate(SceneWidget::TMessageDelegate i_me
 
 void SceneWidget::paintEvent(QPaintEvent* ip_event)
 {
-    QPainter painter(this);
-    
-    auto draw_points_on_screen = [this](const std::vector<Geometry::Point2d>& i_points_to_draw, QPainter& io_painter, Qt::GlobalColor i_color)
+
+    auto draw_points_on_screen = [this](const std::vector<Geometry::Point2d>& i_points_to_draw, QPainter& io_painter, QColor i_color, int i_radius)
     {
         std::vector<QPoint> points_to_draw_screen;
         points_to_draw_screen.reserve(i_points_to_draw.size());
@@ -233,14 +240,10 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
         io_painter.setBrush(i_color);
 
         for (const auto& pt : points_to_draw_screen)
-            io_painter.drawEllipse(pt, g_point_radius, g_point_radius);
+            io_painter.drawEllipse(pt, i_radius, i_radius);
     };
-
-    auto points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPoints(), m_current_region);
-    if (!points_to_draw.empty())
-        draw_points_on_screen(points_to_draw, painter, Qt::blue);
-
-    auto draw_segments_on_screen = [this](const std::vector<std::pair<Point2d, Point2d>>& i_segments, QPainter& io_painter, Qt::GlobalColor i_color)
+    
+    auto draw_segments_on_screen = [this](const std::vector<std::pair<Point2d, Point2d>>& i_segments, QPainter& io_painter, QColor i_color)
     {
         std::vector<std::pair<QPoint, QPoint>> segments_to_draw_screen;
         for (const auto& segment : i_segments)
@@ -250,18 +253,26 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
         for (const auto& segment : segments_to_draw_screen)
             io_painter.drawLine(segment.first, segment.second);
     };
-    draw_segments_on_screen(mp_scene->GetSegments(), painter, Qt::red);
+
+    QPainter painter(this);
+
+    draw_segments_on_screen(mp_scene->GetSegments(), painter, g_edge_color);
+
+    auto points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPoints(), m_current_region);
+    if (!points_to_draw.empty())
+        draw_points_on_screen(points_to_draw, painter, g_nodes_color, g_point_radius);
+
 
     auto selected_points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPickedPoints(), m_current_region);
     if (!selected_points_to_draw.empty())
-        draw_points_on_screen(selected_points_to_draw, painter, Qt::green);
+        draw_points_on_screen(selected_points_to_draw, painter, g_picked_node_color, g_highlighted_point_radius);
 
     auto highlighted_points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetHighlightedPoints(), m_current_region);
     if (!highlighted_points_to_draw.empty())
-        draw_points_on_screen(highlighted_points_to_draw, painter, Qt::yellow);
+        draw_points_on_screen(highlighted_points_to_draw, painter, g_adjacent_node_color, g_highlighted_point_radius);
 
     auto highlighted_segments = mp_scene->GetHighlightedSegments();
-    draw_segments_on_screen(highlighted_segments, painter, Qt::yellow);
+    draw_segments_on_screen(highlighted_segments, painter, g_highlighted_edge_color);
 
 }
 
