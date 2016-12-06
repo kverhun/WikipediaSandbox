@@ -61,8 +61,8 @@ class SceneWidget::_Scene
 public:
     _Scene(std::shared_ptr<Graphs::Graph> ip_graph, std::shared_ptr<Graphs::TGraphTopology> ip_topology)
         : mp_graph(ip_graph)
-        , mp_graph_topology(ip_topology)
-        , m_points(_RetrieveMapValues(*ip_topology.get()))
+        , mp_graph_topology( (!ip_topology || ip_topology->empty()) ? std::make_shared<Graphs::TGraphTopology>(_GenerateRandomGraphPoints(*mp_graph.get())) : ip_topology)
+        , m_points(_RetrieveMapValues(*mp_graph_topology.get()))
         , m_bounding_box(Geometry::GetPointsBoundaries(m_points))
     { }
 
@@ -77,8 +77,13 @@ public:
 
         for (const auto& edge : mp_graph->GetEdges())
         {
-            Point2d pt_from(mp_graph_topology->at(edge.first));
-            Point2d pt_to(mp_graph_topology->at(edge.second));
+            auto it_first = mp_graph_topology->find(edge.first);
+            auto it_second = mp_graph_topology->find(edge.second);
+            if (it_first == mp_graph_topology->end() || it_second == mp_graph_topology->end())
+                continue;
+
+            Point2d pt_from(it_first->second);
+            Point2d pt_to(it_second->second);
             segments.emplace_back(pt_from, pt_to);
         }
 

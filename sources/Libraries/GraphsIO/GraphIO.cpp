@@ -54,6 +54,9 @@ std::unique_ptr<Graphs::Graph> GraphsIO::ReadGraphFromStream(std::istream& i_str
     while (!i_stream.eof())
     {
         std::getline(i_stream, line);
+        if (line.empty())
+            continue;
+
         auto vertices_in_line = _ReadGraphLine(line);
 
         Graph::TVertex vertex_from = vertices_in_line[0];
@@ -76,6 +79,9 @@ Graphs::TGraphTopology GraphsIO::ReadGraphTopologyFromStream(std::istream& i_str
     while (!i_stream.eof())
     {
         std::getline(i_stream, line);
+        if (line.empty())
+            continue;
+
         auto vertex_and_point = _ReadTopologyLine(line);
         topology.insert(vertex_and_point);
     }

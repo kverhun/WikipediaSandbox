@@ -30,16 +30,15 @@ namespace
     {
         const std::string topology_full_file_name = i_directory_name + "/" + g_topology_file_name;
         std::ifstream input_file_stream(topology_full_file_name);
-
+        if (!input_file_stream)
+            return nullptr;
         return std::make_shared<Graphs::TGraphTopology>(GraphsIO::ReadGraphTopologyFromStream(input_file_stream));
-
     }
 }
 
 int main(int i_argc, char** i_argv)
 {
     std::cout << "Wikipedia Sandbox" << std::endl;
-
     QApplication app(i_argc, i_argv);
     QMainWindow wnd;
     wnd.setContentsMargins(5, 5, 5, 5);
