@@ -323,15 +323,16 @@ void SceneWidget::wheelEvent(QWheelEvent* ip_event)
         _ZoomOut();
 }
 
-void SceneWidget::mousePressEvent(QMouseEvent* ip_event)
-{
-    mouseMoveEvent(ip_event);
-}
 
 void SceneWidget::mouseReleaseEvent(QMouseEvent* ip_event)
 {
+    bool should_perform_pick = (mp_panner == nullptr);
+
     if (mp_panner)
         mp_panner.reset();
+
+    if (!should_perform_pick)
+        return;
 
     auto screen_pos = ip_event->pos();
     auto world_pos = _TransformPointFromWidgetToWorld(screen_pos);
