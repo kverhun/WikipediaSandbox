@@ -8,6 +8,7 @@
 
 #include <QPainter>
 #include <QFont>
+#include <QDesktopServices>
 
 #include <QWheelEvent>
 
@@ -68,6 +69,8 @@ namespace
     const QColor g_highlighted_edge_color(158, 55, 55);
 
     const QColor g_text_color(24, 14, 58);
+
+    const Graph::TVertex g_invalid_vertex = static_cast<Graph::TVertex>(-1);
 }
 
 class SceneWidget::_Scene
@@ -183,6 +186,24 @@ public:
                 res.emplace_back(mp_graph_topology->at(v), description);
             }
         return res;
+    }
+
+    bool IsVertexHighlighted(const Graph::TVertex& i_vertex) const
+    {
+        bool is_picked = (std::find(m_picked_vertexes.begin(), m_picked_vertexes.end(), i_vertex) != m_picked_vertexes.end());
+        bool is_highlighted = (std::find(m_highlighted_vertexes.begin(), m_highlighted_vertexes.end(), i_vertex) != m_highlighted_vertexes.end());
+        return is_picked || is_highlighted;
+    }
+
+    std::string GetDescription(const Graph::TVertex& i_vertex) const
+    {
+        std::string description = "";
+        try
+        {
+            description = mp_description->at(i_vertex);
+        }
+        catch(...){}
+        return description;
     }
 
 private:
@@ -334,21 +355,33 @@ void SceneWidget::mouseReleaseEvent(QMouseEvent* ip_event)
     if (!should_perform_pick)
         return;
 
-    auto screen_pos = ip_event->pos();
+    auto picked_vertex = _GetVertexUnderCursor(ip_event->pos());
+
+    if (picked_vertex != g_invalid_vertex)
+        mp_scene->SetPickedVertices({ picked_vertex });
+    else
+        mp_scene->SetPickedVertices({});
+    
+    update();
+}
+
+Graphs::Graph::TVertex SceneWidget::_GetVertexUnderCursor(const QPoint& i_point_screen) const
+{
+    auto screen_pos = i_point_screen;
     auto world_pos = _TransformPointFromWidgetToWorld(screen_pos);
 
-    auto it_point_closest_to_pointer = std::min_element(mp_scene->GetTopology().begin(), mp_scene->GetTopology().end(), 
+    auto it_point_closest_to_pointer = std::min_element(mp_scene->GetTopology().begin(), mp_scene->GetTopology().end(),
         [world_pos](const std::pair<Graph::TVertex, Point2d>& i_entry1, const std::pair<Graph::TVertex, Point2d>& i_entry2)
     {
         return Geometry::DistanceSquare(world_pos, i_entry1.second) < Geometry::DistanceSquare(world_pos, i_entry2.second);
     });
     auto point_closest_to_pointer = it_point_closest_to_pointer->second;
-    
+
     auto radius_x_screen = QPoint(g_point_radius, 0);
-    auto radius_x_world = _TransformPointFromWidgetToWorld(radius_x_screen) - _TransformPointFromWidgetToWorld(QPoint( 0,0 ));
+    auto radius_x_world = _TransformPointFromWidgetToWorld(radius_x_screen) - _TransformPointFromWidgetToWorld(QPoint(0, 0));
 
     auto radius_y_screen = QPoint(0, g_point_radius);
-    auto radius_y_world = _TransformPointFromWidgetToWorld(radius_y_screen) - _TransformPointFromWidgetToWorld(QPoint( 0,0 ));
+    auto radius_y_world = _TransformPointFromWidgetToWorld(radius_y_screen) - _TransformPointFromWidgetToWorld(QPoint(0, 0));
 
     auto rx_world = std::sqrt(Geometry::DistanceSquare(Point2d{ 0,0 }, radius_x_world));
     auto ry_world = std::sqrt(Geometry::DistanceSquare(Point2d{ 0,0 }, radius_y_world));
@@ -363,14 +396,12 @@ void SceneWidget::mouseReleaseEvent(QMouseEvent* ip_event)
         else
             return false;
     }();
-
     if (picked)
-        mp_scene->SetPickedVertices({ it_point_closest_to_pointer->first });
+        return it_point_closest_to_pointer->first;
     else
-        mp_scene->SetPickedVertices({});
-    
-    update();
+        return g_invalid_vertex;
 }
+
 
 void SceneWidget::mouseMoveEvent(QMouseEvent* ip_event)
 {
@@ -409,6 +440,21 @@ void SceneWidget::mouseMoveEvent(QMouseEvent* ip_event)
             mp_panner = std::make_unique<_Panner>(ip_event->pos());
     }
 
+}
+
+void SceneWidget::mouseDoubleClickEvent(QMouseEvent* ip_event)
+{
+    auto picked_vertex = _GetVertexUnderCursor(ip_event->pos());
+    if (mp_scene->IsVertexHighlighted(picked_vertex))
+    {
+        QString url = "https://wikipedia.org/wiki/";
+        QString description = QString::fromStdString(mp_scene->GetDescription(picked_vertex));
+        description.replace(' ', '_');
+
+        url.append(description);
+
+        QDesktopServices::openUrl(QUrl(url));
+    }
 }
 
 void SceneWidget::_ExpandCurrentRegion(double i_dx, double i_dy)

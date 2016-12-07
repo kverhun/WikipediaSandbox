@@ -29,6 +29,7 @@ private:
     void wheelEvent(QWheelEvent* ip_event) override;
     void mouseReleaseEvent(QMouseEvent* ip_event) override;
     void mouseMoveEvent(QMouseEvent* ip_event) override;
+    void mouseDoubleClickEvent(QMouseEvent* ip_event) override;
 
     void _ZoomIn();
     void _ZoomOut();
@@ -38,6 +39,8 @@ private:
     Geometry::Matrix2d _GetTransformMatrixFromSceneToWorld() const;
     Geometry::Point2d _TransformPointFromWidgetToWorld(const QPoint& i_point) const;
     QPoint _TransformPointFromWorldToWidget(const Geometry::Point2d& i_point) const;
+
+    Graphs::Graph::TVertex _GetVertexUnderCursor(const QPoint& i_point_screen) const;
 
 private:
     class _Scene;
