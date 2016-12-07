@@ -15,7 +15,11 @@
 class SceneWidget : public QWidget
 {
 public:
-    SceneWidget(QWidget* ip_parent, std::shared_ptr<Graphs::Graph> ip_graph, std::shared_ptr<Graphs::TGraphTopology> ip_topology);
+    SceneWidget(
+        QWidget* ip_parent, 
+        std::shared_ptr<Graphs::Graph> ip_graph, 
+        std::shared_ptr<Graphs::TGraphTopology> ip_topology, 
+        std::shared_ptr<std::map<Graphs::Graph::TVertex, std::string>> ip_description);
 
     using TMessageDelegate = std::function<void(const std::string&)>;
     void SetMouseMoveMessageDelegate(TMessageDelegate i_message_delegate);

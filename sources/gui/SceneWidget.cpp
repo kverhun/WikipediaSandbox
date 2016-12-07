@@ -7,6 +7,8 @@
 #include "../Libraries/Graphs/GraphGenerator.h"
 
 #include <QPainter>
+#include <QFont>
+
 #include <QWheelEvent>
 
 #include <iostream>
@@ -64,16 +66,19 @@ namespace
 
     const QColor g_edge_color(255, 221, 221);
     const QColor g_highlighted_edge_color(158, 55, 55);
+
+    const QColor g_text_color(24, 14, 58);
 }
 
 class SceneWidget::_Scene
 {
 public:
-    _Scene(std::shared_ptr<Graphs::Graph> ip_graph, std::shared_ptr<Graphs::TGraphTopology> ip_topology)
+    _Scene(std::shared_ptr<Graphs::Graph> ip_graph, std::shared_ptr<Graphs::TGraphTopology> ip_topology, std::shared_ptr<std::map<Graphs::Graph::TVertex, std::string>> ip_description)
         : mp_graph(ip_graph)
         , mp_graph_topology( (!ip_topology || ip_topology->empty()) ? std::make_shared<Graphs::TGraphTopology>(_GenerateRandomGraphPoints(*mp_graph.get())) : ip_topology)
         , m_points(_RetrieveMapValues(*mp_graph_topology.get()))
         , m_bounding_box(Geometry::GetPointsBoundaries(m_points))
+        , mp_description(ip_description)
     { }
 
     const std::vector<Geometry::Point2d>& GetPoints() const
@@ -135,8 +140,6 @@ public:
                 std::cout << "[" << e.first << ", " << e.second << "]; ";
             std::cout << std::endl;
         }
-
-
     }
 
     const std::vector<Geometry::Point2d> GetPickedPoints() const
@@ -163,6 +166,16 @@ public:
         return highlighted_segments;
     }
 
+    std::vector<std::pair<Point2d, std::string>> GetTitlesToDraw() const
+    {
+        std::vector<std::pair<Point2d, std::string>> res;
+        for (auto v : m_picked_vertexes)
+            res.emplace_back(mp_graph_topology->at(v), mp_description->at(v));
+        for (auto v : m_highlighted_vertexes)
+            res.emplace_back(mp_graph_topology->at(v), mp_description->at(v));
+        return res;
+    }
+
 private:
     std::vector<Geometry::Point2d> _GetPointsForVertices(const Graph::TVertices& i_vertices) const
     {
@@ -178,6 +191,7 @@ private:
     std::shared_ptr<Graphs::TGraphTopology> mp_graph_topology;
     std::vector<Geometry::Point2d> m_points;
     std::pair<Geometry::Point2d, Geometry::Point2d> m_bounding_box;
+    std::shared_ptr<std::map<Graphs::Graph::TVertex, std::string>> mp_description;
 
     Graph::TVertices m_picked_vertexes;
     Graph::TVertices m_highlighted_vertexes;
@@ -210,9 +224,10 @@ private:
 };
 
 
-SceneWidget::SceneWidget(QWidget* ip_parent, std::shared_ptr<Graphs::Graph> ip_graph, std::shared_ptr<Graphs::TGraphTopology> ip_topology)
+SceneWidget::SceneWidget(QWidget* ip_parent, std::shared_ptr<Graphs::Graph> ip_graph, std::shared_ptr<Graphs::TGraphTopology> ip_topology,
+    std::shared_ptr<std::map<Graphs::Graph::TVertex, std::string>> ip_description)
     : QWidget(ip_parent)
-    , mp_scene(std::make_unique<_Scene>(ip_graph, ip_topology))
+    , mp_scene(std::make_unique<_Scene>(ip_graph, ip_topology, ip_description))
     , m_current_region(mp_scene->GetBoundingBox())
 {
     setStyleSheet(
@@ -274,6 +289,20 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
     auto highlighted_segments = mp_scene->GetHighlightedSegments();
     draw_segments_on_screen(highlighted_segments, painter, g_highlighted_edge_color);
 
+    auto draw_text_near_point = [this](const Point2d& i_point, const QString& i_str, QPainter& io_painter, QColor i_color)
+    {
+        auto point_screen = _TransformPointFromWorldToWidget(i_point);
+        QPoint text_point(point_screen.x() - 2 * g_highlighted_point_radius, point_screen.y() - 2 * g_highlighted_point_radius);
+
+        QFont font("Times", 15);
+        io_painter.setPen(i_color);
+        io_painter.setFont(font);
+        io_painter.drawText(text_point, i_str);
+    };
+
+    auto titles_to_draw = mp_scene->GetTitlesToDraw();
+    for (const auto& title : titles_to_draw)
+        draw_text_near_point(title.first, QString::fromStdString(title.second), painter, g_text_color);
 }
 
 void SceneWidget::wheelEvent(QWheelEvent* ip_event)

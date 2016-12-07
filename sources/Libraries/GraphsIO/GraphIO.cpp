@@ -43,6 +43,14 @@ namespace
         return std::make_pair(vertex, point);
     }
 
+    std::pair<Graph::TVertex, std::string> _ReadDescriptionLine(const std::string& i_line)
+    {
+        auto tokens = _Tokenize(i_line);
+        Graph::TVertex vertex = std::stoi(tokens[0]);
+        std::string description = tokens[1];
+        return std::make_pair(vertex, description);
+    }
+
 }
 
 std::unique_ptr<Graphs::Graph> GraphsIO::ReadGraphFromStream(std::istream& i_stream)
@@ -87,4 +95,20 @@ Graphs::TGraphTopology GraphsIO::ReadGraphTopologyFromStream(std::istream& i_str
     }
 
     return topology;
+}
+
+std::map<Graphs::Graph::TVertex, std::string> GraphsIO::ReadGraphVerticesDescriptionFromStream(std::istream& i_stream)
+{
+    std::map<Graphs::Graph::TVertex, std::string> result;
+
+    std::string line;
+    while (!i_stream.eof())
+    {
+        std::getline(i_stream, line);
+        if (line.empty())
+            continue;
+
+        result.insert(_ReadDescriptionLine(line));
+    }
+    return result;
 }
