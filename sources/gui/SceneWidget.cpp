@@ -169,10 +169,19 @@ public:
     std::vector<std::pair<Point2d, std::string>> GetTitlesToDraw() const
     {
         std::vector<std::pair<Point2d, std::string>> res;
-        for (auto v : m_picked_vertexes)
-            res.emplace_back(mp_graph_topology->at(v), mp_description->at(v));
-        for (auto v : m_highlighted_vertexes)
-            res.emplace_back(mp_graph_topology->at(v), mp_description->at(v));
+        for (const auto& c : { m_picked_vertexes, m_highlighted_vertexes })
+            for (const auto& v : c)
+            {
+                std::string description = "---";
+                // temporary check for not written descriptions (due to encoding problems)
+                try
+                {
+                    description = mp_description->at(v);
+                }
+                catch (...)
+                { }
+                res.emplace_back(mp_graph_topology->at(v), description);
+            }
         return res;
     }
 
