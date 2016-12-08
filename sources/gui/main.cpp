@@ -11,6 +11,7 @@
 #include <QLayout>
 #include <QStatusBar>
 #include <QString>
+#include <QDesktopWidget>
 
 namespace
 {
@@ -52,6 +53,7 @@ int main(int i_argc, char** i_argv)
     QApplication app(i_argc, i_argv);
     QMainWindow wnd;
     wnd.setContentsMargins(5, 5, 5, 5);
+    wnd.resize(QDesktopWidget().availableGeometry(&wnd).size() * 0.7);
 
     if (i_argc < 2)
         return 1;
