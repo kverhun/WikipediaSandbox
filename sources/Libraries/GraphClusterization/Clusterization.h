@@ -1,3 +1,5 @@
+#pragma once
+
 #include "_Library.h"
 
 #include "../Graphs/Graph.h"
