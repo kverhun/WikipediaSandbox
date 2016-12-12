@@ -1,5 +1,7 @@
 #pragma once
 
+#include "UiController.h"
+
 #include "../Libraries/Geometry/Point2d.h"
 #include "../Libraries/Geometry/Matrix2d.h"
 
@@ -17,9 +19,8 @@ class SceneWidget : public QWidget
 public:
     SceneWidget(
         QWidget* ip_parent, 
-        std::shared_ptr<Graphs::Graph> ip_graph, 
-        std::shared_ptr<Graphs::TGraphTopology> ip_topology, 
-        std::shared_ptr<std::map<Graphs::Graph::TVertex, std::string>> ip_description);
+        std::unique_ptr<UiController> ip_controller
+        );
 
     using TMessageDelegate = std::function<void(const std::string&)>;
     void SetMouseMoveMessageDelegate(TMessageDelegate i_message_delegate);
@@ -43,6 +44,8 @@ private:
     Graphs::Graph::TVertex _GetVertexUnderCursor(const QPoint& i_point_screen) const;
 
 private:
+    std::unique_ptr<UiController> mp_controller;
+
     class _Scene;
     std::unique_ptr<_Scene> mp_scene;
 

@@ -12,7 +12,9 @@ find_package(Qt5Core REQUIRED)
 add_executable(WikipediaSandboxGUI 
     main.cpp
     SceneWidget.h
-    SceneWidget.cpp)
+    SceneWidget.cpp
+    UiController.h
+    UiController.cpp)
     
 target_link_libraries(WikipediaSandboxGUI Qt5::WinMain)
 qt5_use_modules(WikipediaSandboxGUI Widgets)

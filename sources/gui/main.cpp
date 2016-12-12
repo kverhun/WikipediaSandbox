@@ -1,10 +1,12 @@
 #include "SceneWidget.h"
+#include "UiController.h"
 
 #include "../Libraries/Graphs/Graph.h"
 #include "../Libraries/GraphsIO/GraphIO.h"
 
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 #include <QApplication>
 #include <QMainWindow>
@@ -63,7 +65,7 @@ int main(int i_argc, char** i_argv)
     auto p_topology = _ReadTopologyFromFile(directory_name);
     auto p_description = _ReadDescriptionFromFile(directory_name);
 
-    auto* p_scene_widget = new SceneWidget(&wnd, p_graph, p_topology, p_description);
+    auto* p_scene_widget = new SceneWidget(&wnd, std::make_unique<UiController>(p_graph, p_topology, p_description));
 
     wnd.setCentralWidget(p_scene_widget);
 

@@ -31,19 +31,9 @@ namespace
 
     const double g_zoom_factor = 0.1;
 
-    std::map<Graphs::Graph::TVertex, Point2d> _GenerateRandomGraphPoints(const Graphs::Graph& i_graph)
-    {
-        std::map<Graphs::Graph::TVertex, Point2d> res;
-        std::vector<Point2d> random_points = Geometry::GenerateRandomPoints(i_graph.GetVertices().size(), -100000, -100000, 100000, 100000);
-        for (size_t i = 0; i < random_points.size(); ++i)
-        {
-            res.insert(std::make_pair(i_graph.GetVertices()[i], random_points[i]));
-        }
-        return res;
-    }
+
 
     const std::unique_ptr<Graphs::Graph> gp_random_graph = Graphs::GenerateGraph(10000);
-    const std::map<Graphs::Graph::TVertex, Point2d> g_random_graph_map = _GenerateRandomGraphPoints(*gp_random_graph.get());
 
     void _OutputPoint(const std::string& i_description, const Geometry::Point2d& i_point)
     {
@@ -76,12 +66,10 @@ namespace
 class SceneWidget::_Scene
 {
 public:
-    _Scene(std::shared_ptr<Graphs::Graph> ip_graph, std::shared_ptr<Graphs::TGraphTopology> ip_topology, std::shared_ptr<std::map<Graphs::Graph::TVertex, std::string>> ip_description)
-        : mp_graph(ip_graph)
-        , mp_graph_topology( (!ip_topology || ip_topology->empty()) ? std::make_shared<Graphs::TGraphTopology>(_GenerateRandomGraphPoints(*mp_graph.get())) : ip_topology)
-        , m_points(_RetrieveMapValues(*mp_graph_topology.get()))
+    _Scene(const UiController& i_controller)
+        : m_controller(i_controller)
+        , m_points(_RetrieveMapValues(m_controller.GetTopology()))
         , m_bounding_box(Geometry::GetPointsBoundaries(m_points))
-        , mp_description(ip_description)
     { }
 
     const std::vector<Geometry::Point2d>& GetPoints() const
@@ -91,18 +79,18 @@ public:
 
     const Graphs::TGraphTopology& GetTopology() const
     {
-        return *mp_graph_topology.get();
+        return m_controller.GetTopology();
     }
 
     std::vector<std::pair<Point2d, Point2d>> GetSegments() const
     {
         std::vector<std::pair<Point2d, Point2d>> segments;
 
-        for (const auto& edge : mp_graph->GetEdges())
+        for (const auto& edge : m_controller.GetGraph().GetEdges())
         {
-            auto it_first = mp_graph_topology->find(edge.first);
-            auto it_second = mp_graph_topology->find(edge.second);
-            if (it_first == mp_graph_topology->end() || it_second == mp_graph_topology->end())
+            auto it_first = m_controller.GetTopology().find(edge.first);
+            auto it_second = m_controller.GetTopology().find(edge.second);
+            if (it_first == m_controller.GetTopology().end() || it_second == m_controller.GetTopology().end())
                 continue;
 
             Point2d pt_from(it_first->second);
@@ -126,7 +114,7 @@ public:
 
         if (!m_picked_vertexes.empty())
         { 
-            m_highlighted_edges = mp_graph->GetEdgesFromVertex(m_picked_vertexes.front());
+            m_highlighted_edges = m_controller.GetGraph().GetEdgesFromVertex(m_picked_vertexes.front());
             for (const auto& e : m_highlighted_edges)
                 m_highlighted_vertexes.push_back(e.second);
         }
@@ -161,10 +149,10 @@ public:
         if (m_picked_vertexes.empty())
             return highlighted_segments;
 
-        auto point_from = mp_graph_topology->at(m_picked_vertexes.front());
+        auto point_from = m_controller.GetTopology().at(m_picked_vertexes.front());
 
         for (const auto& e : m_highlighted_edges)
-            highlighted_segments.emplace_back(point_from, mp_graph_topology->at(e.second));
+            highlighted_segments.emplace_back(point_from, m_controller.GetTopology().at(e.second));
 
         return highlighted_segments;
     }
@@ -179,11 +167,11 @@ public:
                 // temporary check for not written descriptions (due to encoding problems)
                 try
                 {
-                    description = mp_description->at(v);
+                    description = m_controller.GetGraphDescription().at(v);
                 }
                 catch (...)
                 { }
-                res.emplace_back(mp_graph_topology->at(v), description);
+                res.emplace_back(m_controller.GetTopology().at(v), description);
             }
         return res;
     }
@@ -200,7 +188,7 @@ public:
         std::string description = "";
         try
         {
-            description = mp_description->at(i_vertex);
+            description = m_controller.GetGraphDescription().at(i_vertex);
         }
         catch(...){}
         return description;
@@ -211,17 +199,15 @@ private:
     {
         std::vector<Geometry::Point2d> points;
         for (auto v : i_vertices)
-            points.push_back(mp_graph_topology->at(v));
+            points.push_back(m_controller.GetTopology().at(v));
         return points;
     }
 
 private:
+    const UiController& m_controller;
 
-    std::shared_ptr<Graphs::Graph> mp_graph;
-    std::shared_ptr<Graphs::TGraphTopology> mp_graph_topology;
     std::vector<Geometry::Point2d> m_points;
     std::pair<Geometry::Point2d, Geometry::Point2d> m_bounding_box;
-    std::shared_ptr<std::map<Graphs::Graph::TVertex, std::string>> mp_description;
 
     Graph::TVertices m_picked_vertexes;
     Graph::TVertices m_highlighted_vertexes;
@@ -254,10 +240,10 @@ private:
 };
 
 
-SceneWidget::SceneWidget(QWidget* ip_parent, std::shared_ptr<Graphs::Graph> ip_graph, std::shared_ptr<Graphs::TGraphTopology> ip_topology,
-    std::shared_ptr<std::map<Graphs::Graph::TVertex, std::string>> ip_description)
+SceneWidget::SceneWidget(QWidget* ip_parent, std::unique_ptr<UiController> ip_controller)
     : QWidget(ip_parent)
-    , mp_scene(std::make_unique<_Scene>(ip_graph, ip_topology, ip_description))
+    , mp_controller(std::move(ip_controller))
+    , mp_scene(std::make_unique<_Scene>(*mp_controller.get()))
     , m_current_region(mp_scene->GetBoundingBox())
 {
     setStyleSheet(
