@@ -25,9 +25,15 @@ public:
     const Graphs::TGraphTopology& GetTopology() const;
     const TGraphDescription& GetGraphDescription() const;
 
+    const std::vector<Geometry::Point2d>& GetTopologyPoints() const;
+    const std::pair<Geometry::Point2d, Geometry::Point2d>& GetTopologyBoundingBox() const;
+
 private:
     TGraphPtr mp_graph;
     TTopologyPtr mp_topology;
     TDescriptionPtr mp_description;
+
+    std::vector<Geometry::Point2d> m_topology_points;
+    std::pair<Geometry::Point2d, Geometry::Point2d> m_topology_bounding_box;
 
 };

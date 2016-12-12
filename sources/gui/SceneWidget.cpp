@@ -31,21 +31,11 @@ namespace
 
     const double g_zoom_factor = 0.1;
 
-
-
     const std::unique_ptr<Graphs::Graph> gp_random_graph = Graphs::GenerateGraph(10000);
 
     void _OutputPoint(const std::string& i_description, const Geometry::Point2d& i_point)
     {
         std::cout << i_description << ": [" << i_point.GetX() << "; " << i_point.GetY() << "]." << std::endl;
-    }
-
-    template<typename K, typename V>
-    std::vector<V> _RetrieveMapValues(const std::map<K, V>& i_map)
-    {
-        std::vector<V> result;
-        std::transform(i_map.begin(), i_map.end(), std::back_inserter(result), [&i_map](const std::pair<K,V>& i_el) {return i_el.second; });
-        return std::move(result);
     }
 
     const size_t g_point_radius = 7;
@@ -68,13 +58,11 @@ class SceneWidget::_Scene
 public:
     _Scene(const UiController& i_controller)
         : m_controller(i_controller)
-        , m_points(_RetrieveMapValues(m_controller.GetTopology()))
-        , m_bounding_box(Geometry::GetPointsBoundaries(m_points))
     { }
 
     const std::vector<Geometry::Point2d>& GetPoints() const
     {
-        return m_points;
+        return m_controller.GetTopologyPoints();
     }
 
     const Graphs::TGraphTopology& GetTopology() const
@@ -103,7 +91,7 @@ public:
 
     std::pair<Geometry::Point2d, Geometry::Point2d> GetBoundingBox() const
     {
-        return m_bounding_box;
+        return m_controller.GetTopologyBoundingBox();
     }
 
     void SetPickedVertices(const Graph::TVertices& i_vertices)
@@ -205,9 +193,6 @@ private:
 
 private:
     const UiController& m_controller;
-
-    std::vector<Geometry::Point2d> m_points;
-    std::pair<Geometry::Point2d, Geometry::Point2d> m_bounding_box;
 
     Graph::TVertices m_picked_vertexes;
     Graph::TVertices m_highlighted_vertexes;

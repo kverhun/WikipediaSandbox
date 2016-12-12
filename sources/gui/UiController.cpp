@@ -2,6 +2,10 @@
 
 #include "../Libraries/Geometry/Utils.h"
 
+#include <map>
+#include <iterator>
+#include <algorithm>
+
 namespace
 {
     using Geometry::Point2d;
@@ -16,6 +20,14 @@ namespace
         }
         return res;
     }
+
+    template<typename K, typename V>
+    std::vector<V> _RetrieveMapValues(const std::map<K, V>& i_map)
+    {
+        std::vector<V> result;
+        std::transform(i_map.begin(), i_map.end(), std::back_inserter(result), [&i_map](const std::pair<K, V>& i_el) {return i_el.second; });
+        return std::move(result);
+    }
 }
 
 UiController::UiController(
@@ -25,6 +37,8 @@ UiController::UiController(
     : mp_graph(ip_graph)
     , mp_topology((!ip_topology || ip_topology->empty()) ? std::make_shared<Graphs::TGraphTopology>(_GenerateRandomGraphPoints(*mp_graph.get())) : ip_topology)
     , mp_description(ip_description)
+    , m_topology_points(_RetrieveMapValues(*mp_topology.get()))
+    , m_topology_bounding_box(Geometry::GetPointsBoundaries(m_topology_points))
 {
 
 }
@@ -42,4 +56,14 @@ const Graphs::TGraphTopology& UiController::GetTopology() const
 const TGraphDescription& UiController::GetGraphDescription() const
 {
     return *mp_description.get();
+}
+
+const std::vector<Geometry::Point2d>& UiController::GetTopologyPoints() const
+{
+    return m_topology_points;
+}
+
+const std::pair<Geometry::Point2d, Geometry::Point2d>& UiController::GetTopologyBoundingBox() const
+{
+    return m_topology_bounding_box;
 }
