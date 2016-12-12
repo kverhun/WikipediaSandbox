@@ -28,6 +28,8 @@ public:
     const std::vector<Geometry::Point2d>& GetTopologyPoints() const;
     const std::pair<Geometry::Point2d, Geometry::Point2d>& GetTopologyBoundingBox() const;
 
+    void SetVisibleRegion(const std::pair<Geometry::Point2d, Geometry::Point2d>& i_region);
+
 private:
     TGraphPtr mp_graph;
     TTopologyPtr mp_topology;

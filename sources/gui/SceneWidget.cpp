@@ -310,13 +310,9 @@ void SceneWidget::wheelEvent(QWheelEvent* ip_event)
 {
     std::cout << "Wheel event. Delta = " << ip_event->delta() << std::endl;
 
-    auto visible_reg = m_current_region.second - m_current_region.first;
-    auto visible_x = abs(visible_reg.GetX());
-    auto visible_y = abs(visible_reg.GetY());
-    
-    auto world_size = mp_scene->GetBoundingBox().second - mp_scene->GetBoundingBox().first;
-    auto visible_x_frac = static_cast<double>(visible_x) / world_size.GetX();
-    auto visible_y_frac = static_cast<double>(visible_y) / world_size.GetY();
+    auto fracs = Geometry::GetRegionsFraction(m_current_region, mp_scene->GetBoundingBox());
+    auto visible_x_frac = fracs.first;
+    auto visible_y_frac = fracs.second;
     if ((std::min(visible_x_frac, visible_y_frac) <= 0.1 && ip_event->delta() > 0) || (std::max(visible_x_frac, visible_y_frac) >= 2. && ip_event->delta() < 0))
     {
         std::cout << "x frac: " << visible_x_frac << "; y_frac: " << visible_y_frac << std::endl;

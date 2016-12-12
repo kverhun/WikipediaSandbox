@@ -70,4 +70,21 @@ namespace Geometry
         auto dy = i_point1.GetY() - i_point2.GetY();
         return dx*dx + dy*dy;
     }
+
+    std::pair<double, double> GetRegionsFraction(const std::pair<Point2d, Point2d>& i_first_region, const std::pair<Point2d, Point2d>& i_second_region)
+    {
+        auto first_reg_size = i_first_region.second - i_first_region.first;
+        auto first_reg_x = abs(first_reg_size.GetX());
+        auto first_reg_y = abs(first_reg_size.GetY());
+
+        auto second_reg_size = i_second_region.second - i_second_region.first;
+        auto second_reg_x = abs(second_reg_size.GetX());
+        auto second_reg_y = abs(second_reg_size.GetY());
+        
+        auto x_frac = first_reg_x / second_reg_x;
+        auto y_frac = first_reg_y / second_reg_y;
+
+        return std::make_pair(x_frac, y_frac);
+    }
+
 }
