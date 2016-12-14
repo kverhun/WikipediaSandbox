@@ -71,5 +71,5 @@ const std::pair<Geometry::Point2d, Geometry::Point2d>& UiController::GetTopology
 void UiController::SetVisibleRegion(const std::pair<Geometry::Point2d, Geometry::Point2d>& i_region)
 {
     auto fracs = Geometry::GetRegionsFraction(i_region, m_topology_bounding_box);
-
+    m_current_scale = std::min(fracs.first, fracs.second);
 }
