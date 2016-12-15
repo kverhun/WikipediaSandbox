@@ -17,6 +17,11 @@ std::shared_ptr<Graph> Clusterization::GetClusterGraph() const
     return mp_cluster_graph;
 }
 
+const Graph& Clusterization::GetBaseGraph() const
+{
+    return m_graph;
+}
+
 std::shared_ptr<Graph> Clusterization::_CreateClusterGraph()
 {
     std::set<Graph::TVertex> vertices;

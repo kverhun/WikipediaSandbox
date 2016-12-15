@@ -1,6 +1,8 @@
 #include "UiController.h"
 
 #include "../Libraries/Geometry/Utils.h"
+#include "../Libraries/GraphClusterization/Clusterization.h"
+#include "../Libraries/GraphClusterization/RandomClusterization.h"
 
 #include <map>
 #include <iterator>
@@ -10,15 +12,31 @@ namespace
 {
     using Geometry::Point2d;
 
-    std::map<Graphs::Graph::TVertex, Point2d> _GenerateRandomGraphPoints(const Graphs::Graph& i_graph)
+    Graphs::TGraphTopology _GenerateRandomPointsForVerticesInRectangle(
+        const Graphs::Graph::TVertices& i_vertices,
+        int i_x_min, int i_y_min,
+        int i_x_max, int i_y_max
+        )
     {
-        std::map<Graphs::Graph::TVertex, Point2d> res;
-        std::vector<Point2d> random_points = Geometry::GenerateRandomPoints(i_graph.GetVertices().size(), -100000, -100000, 100000, 100000);
+        Graphs::TGraphTopology res;
+        std::vector<Point2d> random_points = Geometry::GenerateRandomPoints(i_vertices.size(), i_x_min, i_y_min, i_x_max, i_y_min);
         for (size_t i = 0; i < random_points.size(); ++i)
         {
-            res.insert(std::make_pair(i_graph.GetVertices()[i], random_points[i]));
+            res.insert(std::make_pair(i_vertices[i], random_points[i]));
         }
         return res;
+    }
+
+    Graphs::TGraphTopology _GenerateRandomGraphPoints(const Graphs::Graph& i_graph)
+    {
+        return _GenerateRandomPointsForVerticesInRectangle(i_graph.GetVertices(), -100000, -100000, 100000, 100000);
+    }
+
+    Graphs::TGraphTopology _GenerateRandomGraphPointsBasedOnClusterization(const GraphClusterization::Clusterization& i_clusterization)
+    {
+        Graphs::TGraphTopology topology;
+        
+        return topology;
     }
 
     template<typename K, typename V>
@@ -29,6 +47,26 @@ namespace
         return std::move(result);
     }
 }
+
+class UiController::_ClusterizationInfo
+{
+public:
+    _ClusterizationInfo(const Graphs::Graph& i_graph)
+        : m_base_graph(i_graph)
+    {
+        mp_clusterization = GraphClusterization::CreateRandomClusterization(m_base_graph, 100);
+        m_clusterization_topology = _GenerateRandomGraphPoints(*mp_clusterization->GetClusterGraph().get());
+
+
+    }
+
+private:
+    const Graphs::Graph& m_base_graph;
+    Graphs::TGraphTopology m_base_topology;
+
+    std::unique_ptr<GraphClusterization::Clusterization> mp_clusterization;
+    Graphs::TGraphTopology m_clusterization_topology;
+};
 
 UiController::UiController(
     TGraphPtr ip_graph,

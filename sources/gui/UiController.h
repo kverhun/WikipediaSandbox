@@ -38,4 +38,7 @@ private:
     std::vector<Geometry::Point2d> m_topology_points;
     std::pair<Geometry::Point2d, Geometry::Point2d> m_topology_bounding_box;
 
+    class _ClusterizationInfo;
+    std::unique_ptr<_ClusterizationInfo> mp_clusterization;
+
 };

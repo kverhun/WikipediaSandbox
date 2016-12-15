@@ -19,6 +19,7 @@ namespace GraphClusterization
         Clusterization(const TClusterMap& i_cluster_map, const Graphs::Graph& i_graph);
 
         std::shared_ptr<Graphs::Graph> GetClusterGraph() const;
+        const Graphs::Graph& GetBaseGraph() const;
 
     private:
         std::shared_ptr<Graphs::Graph> _CreateClusterGraph();
