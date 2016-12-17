@@ -38,8 +38,8 @@ namespace
         std::cout << i_description << ": [" << i_point.GetX() << "; " << i_point.GetY() << "]." << std::endl;
     }
 
-    const size_t g_point_radius = 7;
-    const size_t g_highlighted_point_radius = 10;
+    const size_t g_point_radius = 10;
+    const size_t g_highlighted_point_radius = 15;
 
     const QColor g_nodes_color(150, 150, 255, 96);
     const QColor g_adjacent_node_color(119, 128, 255, 192);

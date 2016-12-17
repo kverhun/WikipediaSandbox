@@ -58,6 +58,28 @@ public:
     {
         mp_clusterization = GraphClusterization::CreateRandomClusterization(m_base_graph, 100);
         m_clusterization_topology = _GenerateRandomGraphPoints(*mp_clusterization->GetClusterGraph().get());
+        m_clusterization_topology_points = _RetrieveMapValues(m_clusterization_topology);
+        mp_clusterization_desciption = std::make_shared<TGraphDescription>();
+    }
+
+    const Graphs::Graph& GetClusterizedGraph() const
+    {
+        return *mp_clusterization->GetClusterGraph().get();
+    }
+
+    const Graphs::TGraphTopology& GetClusterizedTopology() const
+    {
+        return m_clusterization_topology;
+    }
+
+    const std::vector<Geometry::Point2d>& GetClusterizedTopologyPoints() const
+    {
+        return m_clusterization_topology_points;
+    }
+
+    const TGraphDescription& GetClusterizationDescription() const
+    {
+        return *mp_clusterization_desciption.get();
     }
 
 private:
@@ -66,6 +88,8 @@ private:
 
     std::unique_ptr<GraphClusterization::Clusterization> mp_clusterization;
     Graphs::TGraphTopology m_clusterization_topology;
+    std::vector<Geometry::Point2d> m_clusterization_topology_points;
+    TDescriptionPtr mp_clusterization_desciption;
 };
 
 UiController::UiController(
@@ -89,22 +113,44 @@ UiController::~UiController()
 
 const Graphs::Graph& UiController::GetGraph() const
 {
-    return *mp_graph.get();
+    if (m_current_zoom_factor < 0.95)
+    {
+        std::cout << "Return original graph" << std::endl;
+        return *mp_graph.get();
+    }
+    else
+    {
+        std::cout << "Return clusterized graph" << std::endl;
+        return mp_clusterization->GetClusterizedGraph();
+    }
 }
 
 const Graphs::TGraphTopology& UiController::GetTopology() const
 {
-    return *mp_topology.get();
+    if (m_current_zoom_factor <= 0.95)
+    {
+        return *mp_topology.get();
+    }
+    else
+    {
+        return mp_clusterization->GetClusterizedTopology();
+    }
 }
 
 const TGraphDescription& UiController::GetGraphDescription() const
 {
-    return *mp_description.get();
+    if (m_current_zoom_factor <= 0.95)
+        return *mp_description.get();
+    else
+        return mp_clusterization->GetClusterizationDescription();
 }
 
 const std::vector<Geometry::Point2d>& UiController::GetTopologyPoints() const
 {
-    return m_topology_points;
+    if (m_current_zoom_factor <= 0.95)
+        return m_topology_points;
+    else
+        return mp_clusterization->GetClusterizedTopologyPoints();
 }
 
 const std::pair<Geometry::Point2d, Geometry::Point2d>& UiController::GetTopologyBoundingBox() const
