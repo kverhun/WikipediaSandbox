@@ -60,6 +60,19 @@ public:
         m_clusterization_topology = _GenerateRandomGraphPoints(*mp_clusterization->GetClusterGraph().get());
         m_clusterization_topology_points = _RetrieveMapValues(m_clusterization_topology);
         mp_clusterization_desciption = std::make_shared<TGraphDescription>();
+
+        m_base_topology = _GenerateRandomGraphPoints(m_base_graph);
+        m_base_topology_points = _RetrieveMapValues(m_base_topology);
+    }
+
+    const Graphs::TGraphTopology& GetBaseGraphTopology() const
+    {
+        return m_base_topology;
+    }
+
+    const std::vector<Geometry::Point2d>& GetBaseGraphTopologyPoints() const
+    {
+        return m_base_topology_points;
     }
 
     const Graphs::Graph& GetClusterizedGraph() const
@@ -85,6 +98,7 @@ public:
 private:
     const Graphs::Graph& m_base_graph;
     Graphs::TGraphTopology m_base_topology;
+    std::vector<Geometry::Point2d> m_base_topology_points;
 
     std::unique_ptr<GraphClusterization::Clusterization> mp_clusterization;
     Graphs::TGraphTopology m_clusterization_topology;
@@ -97,13 +111,10 @@ UiController::UiController(
     TTopologyPtr ip_topology,
     TDescriptionPtr ip_description)
     : mp_graph(ip_graph)
-    , mp_topology((!ip_topology || ip_topology->empty()) ? std::make_shared<Graphs::TGraphTopology>(_GenerateRandomGraphPoints(*mp_graph.get())) : ip_topology)
     , mp_description(ip_description)
-    , m_topology_points(_RetrieveMapValues(*mp_topology.get()))
-    , m_topology_bounding_box(Geometry::GetPointsBoundaries(m_topology_points))
     , mp_clusterization(std::make_unique<_ClusterizationInfo>(*ip_graph.get()))
+    , m_topology_bounding_box(Geometry::GetPointsBoundaries(mp_clusterization->GetBaseGraphTopologyPoints()))
 {
-
 }
 
 UiController::~UiController()
@@ -122,7 +133,7 @@ const Graphs::Graph& UiController::GetGraph() const
 const Graphs::TGraphTopology& UiController::GetTopology() const
 {
     if (m_current_zoom_factor <= 0.95)
-        return *mp_topology.get();
+        return mp_clusterization->GetBaseGraphTopology();
     else
         return mp_clusterization->GetClusterizedTopology();
 }
@@ -138,7 +149,7 @@ const TGraphDescription& UiController::GetGraphDescription() const
 const std::vector<Geometry::Point2d>& UiController::GetTopologyPoints() const
 {
     if (m_current_zoom_factor <= 0.95)
-        return m_topology_points;
+        return mp_clusterization->GetBaseGraphTopologyPoints();
     else
         return mp_clusterization->GetClusterizedTopologyPoints();
 }

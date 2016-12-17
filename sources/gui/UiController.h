@@ -34,14 +34,12 @@ public:
     double GetPointRadius() const;
 private:
     TGraphPtr mp_graph;
-    TTopologyPtr mp_topology;
     TDescriptionPtr mp_description;
 
-    std::vector<Geometry::Point2d> m_topology_points;
-    std::pair<Geometry::Point2d, Geometry::Point2d> m_topology_bounding_box;
 
     class _ClusterizationInfo;
     std::unique_ptr<_ClusterizationInfo> mp_clusterization;
 
+    std::pair<Geometry::Point2d, Geometry::Point2d> m_topology_bounding_box;
     double m_current_zoom_factor;
 };
