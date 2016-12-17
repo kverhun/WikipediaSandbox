@@ -20,6 +20,7 @@ public:
         TGraphPtr ip_graph,
         TTopologyPtr ip_topology,
         TDescriptionPtr ip_description);
+    ~UiController();
 
     const Graphs::Graph& GetGraph() const;
     const Graphs::TGraphTopology& GetTopology() const;

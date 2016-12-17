@@ -1,6 +1,7 @@
 #include "UiController.h"
 
 #include "../Libraries/Geometry/Utils.h"
+
 #include "../Libraries/GraphClusterization/Clusterization.h"
 #include "../Libraries/GraphClusterization/RandomClusterization.h"
 
@@ -56,8 +57,6 @@ public:
     {
         mp_clusterization = GraphClusterization::CreateRandomClusterization(m_base_graph, 100);
         m_clusterization_topology = _GenerateRandomGraphPoints(*mp_clusterization->GetClusterGraph().get());
-
-
     }
 
 private:
@@ -77,6 +76,12 @@ UiController::UiController(
     , mp_description(ip_description)
     , m_topology_points(_RetrieveMapValues(*mp_topology.get()))
     , m_topology_bounding_box(Geometry::GetPointsBoundaries(m_topology_points))
+    , mp_clusterization(std::make_unique<_ClusterizationInfo>(*ip_graph.get()))
+{
+
+}
+
+UiController::~UiController()
 {
 
 }
