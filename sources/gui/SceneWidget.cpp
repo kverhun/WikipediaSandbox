@@ -274,18 +274,27 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
 
     draw_segments_on_screen(mp_scene->GetSegments(), painter, g_edge_color);
 
+    //auto radius_x_screen = QPoint(g_point_radius, 0);
+    //auto radius_x_world = _TransformPointFromWidgetToWorld(radius_x_screen) - _TransformPointFromWidgetToWorld(QPoint(0, 0));
+
+    auto radius = mp_controller->GetPointRadius();
+    Point2d radius_world{ radius, 0 };
+    auto radius_screen = _TransformPointFromWorldToWidget(radius_world) - _TransformPointFromWorldToWidget(Point2d{0,0});
+
+    const size_t point_radius = std::max(radius_screen.x(), radius_screen.y());
+
     auto points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPoints(), m_current_region);
     if (!points_to_draw.empty())
-        draw_points_on_screen(points_to_draw, painter, g_nodes_color, g_point_radius);
+        draw_points_on_screen(points_to_draw, painter, g_nodes_color, point_radius);
 
 
     auto selected_points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPickedPoints(), m_current_region);
     if (!selected_points_to_draw.empty())
-        draw_points_on_screen(selected_points_to_draw, painter, g_picked_node_color, g_highlighted_point_radius);
+        draw_points_on_screen(selected_points_to_draw, painter, g_picked_node_color, point_radius);
 
     auto highlighted_points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetHighlightedPoints(), m_current_region);
     if (!highlighted_points_to_draw.empty())
-        draw_points_on_screen(highlighted_points_to_draw, painter, g_adjacent_node_color, g_highlighted_point_radius);
+        draw_points_on_screen(highlighted_points_to_draw, painter, g_adjacent_node_color, point_radius);
 
     auto highlighted_segments = mp_scene->GetHighlightedSegments();
     draw_segments_on_screen(highlighted_segments, painter, g_highlighted_edge_color);
@@ -359,10 +368,15 @@ Graphs::Graph::TVertex SceneWidget::_GetVertexUnderCursor(const QPoint& i_point_
     });
     auto point_closest_to_pointer = it_point_closest_to_pointer->second;
 
-    auto radius_x_screen = QPoint(g_point_radius, 0);
+    auto radius = mp_controller->GetPointRadius();
+    Point2d radius_world{ radius, 0 };
+    auto radius_screen = _TransformPointFromWorldToWidget(radius_world) - _TransformPointFromWorldToWidget(Point2d{ 0,0 });
+    const size_t point_radius = std::max(radius_screen.x(), radius_screen.y());
+
+    auto radius_x_screen = QPoint(point_radius, 0);
     auto radius_x_world = _TransformPointFromWidgetToWorld(radius_x_screen) - _TransformPointFromWidgetToWorld(QPoint(0, 0));
 
-    auto radius_y_screen = QPoint(0, g_point_radius);
+    auto radius_y_screen = QPoint(0, point_radius);
     auto radius_y_world = _TransformPointFromWidgetToWorld(radius_y_screen) - _TransformPointFromWidgetToWorld(QPoint(0, 0));
 
     auto rx_world = std::sqrt(Geometry::DistanceSquare(Point2d{ 0,0 }, radius_x_world));

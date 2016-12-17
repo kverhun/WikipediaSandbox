@@ -114,27 +114,17 @@ UiController::~UiController()
 const Graphs::Graph& UiController::GetGraph() const
 {
     if (m_current_zoom_factor < 0.95)
-    {
-        std::cout << "Return original graph" << std::endl;
         return *mp_graph.get();
-    }
     else
-    {
-        std::cout << "Return clusterized graph" << std::endl;
         return mp_clusterization->GetClusterizedGraph();
-    }
 }
 
 const Graphs::TGraphTopology& UiController::GetTopology() const
 {
     if (m_current_zoom_factor <= 0.95)
-    {
         return *mp_topology.get();
-    }
     else
-    {
         return mp_clusterization->GetClusterizedTopology();
-    }
 }
 
 const TGraphDescription& UiController::GetGraphDescription() const
@@ -164,4 +154,12 @@ void UiController::SetVisibleRegion(const std::pair<Geometry::Point2d, Geometry:
     m_current_zoom_factor = std::max(fracs.first, fracs.second);
 
     std::cout << "Current zoom: " << m_current_zoom_factor << std::endl;
+}
+
+double UiController::GetPointRadius() const
+{
+    if (m_current_zoom_factor <= 0.95)
+        return 200000. / 175;
+    else
+        return 200000. / 50;
 }

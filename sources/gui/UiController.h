@@ -31,6 +31,7 @@ public:
 
     void SetVisibleRegion(const std::pair<Geometry::Point2d, Geometry::Point2d>& i_region);
 
+    double GetPointRadius() const;
 private:
     TGraphPtr mp_graph;
     TTopologyPtr mp_topology;
