@@ -21,6 +21,8 @@ namespace GraphClusterization
         std::shared_ptr<Graphs::Graph> GetClusterGraph() const;
         const Graphs::Graph& GetBaseGraph() const;
 
+        TClusterId GetClusterIdForVertex(const Graphs::Graph::TVertex& i_vertex) const;
+
     private:
         std::shared_ptr<Graphs::Graph> _CreateClusterGraph();
 

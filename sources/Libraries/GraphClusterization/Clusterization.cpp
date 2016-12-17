@@ -43,3 +43,8 @@ std::shared_ptr<Graph> Clusterization::_CreateClusterGraph()
 
     return std::make_shared<Graph>(Graph::TVertices(vertices.begin(), vertices.end()), Graph::TEdges(edges.begin(), edges.end()));
 }
+
+TClusterId Clusterization::GetClusterIdForVertex(const Graphs::Graph::TVertex& i_vertex) const
+{
+    return m_cluster_map.at(i_vertex);
+}
