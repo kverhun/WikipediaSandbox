@@ -445,6 +445,8 @@ void SceneWidget::_ExpandCurrentRegion(double i_dx, double i_dy)
     m_current_region.second.SetX(m_current_region.second.GetX() + i_dx / 2);
     m_current_region.first.SetY(m_current_region.first.GetY() - i_dy / 2);
     m_current_region.second.SetY(m_current_region.second.GetY() + i_dy / 2);
+
+    mp_controller->SetVisibleRegion(m_current_region);
 }
 
 void SceneWidget::_ShrinkCurrentRegion(double i_dx, double i_dy)
@@ -453,6 +455,8 @@ void SceneWidget::_ShrinkCurrentRegion(double i_dx, double i_dy)
     m_current_region.second.SetX(m_current_region.second.GetX() - i_dx / 2);
     m_current_region.first.SetY(m_current_region.first.GetY() + i_dy / 2);
     m_current_region.second.SetY(m_current_region.second.GetY() - i_dy / 2);
+
+    mp_controller->SetVisibleRegion(m_current_region);
 }
 
 void SceneWidget::_ZoomIn()

@@ -5,6 +5,7 @@
 #include "../Libraries/GraphClusterization/Clusterization.h"
 #include "../Libraries/GraphClusterization/RandomClusterization.h"
 
+#include <iostream>
 #include <map>
 #include <iterator>
 #include <algorithm>
@@ -20,7 +21,7 @@ namespace
         )
     {
         Graphs::TGraphTopology res;
-        std::vector<Point2d> random_points = Geometry::GenerateRandomPoints(i_vertices.size(), i_x_min, i_y_min, i_x_max, i_y_min);
+        std::vector<Point2d> random_points = Geometry::GenerateRandomPoints(i_vertices.size(), i_x_min, i_y_min, i_x_max, i_y_max);
         for (size_t i = 0; i < random_points.size(); ++i)
         {
             res.insert(std::make_pair(i_vertices[i], random_points[i]));
@@ -114,5 +115,7 @@ const std::pair<Geometry::Point2d, Geometry::Point2d>& UiController::GetTopology
 void UiController::SetVisibleRegion(const std::pair<Geometry::Point2d, Geometry::Point2d>& i_region)
 {
     auto fracs = Geometry::GetRegionsFraction(i_region, m_topology_bounding_box);
+    m_current_zoom_factor = std::max(fracs.first, fracs.second);
 
+    std::cout << "Current zoom: " << m_current_zoom_factor << std::endl;
 }

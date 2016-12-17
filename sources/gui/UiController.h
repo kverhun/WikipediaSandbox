@@ -42,4 +42,5 @@ private:
     class _ClusterizationInfo;
     std::unique_ptr<_ClusterizationInfo> mp_clusterization;
 
+    double m_current_zoom_factor;
 };
