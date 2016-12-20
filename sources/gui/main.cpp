@@ -52,6 +52,9 @@ namespace
 int main(int i_argc, char** i_argv)
 {
     std::cout << "Wikipedia Sandbox" << std::endl;
+
+    system("pause");
+
     QApplication app(i_argc, i_argv);
     QMainWindow wnd;
     wnd.setContentsMargins(5, 5, 5, 5);

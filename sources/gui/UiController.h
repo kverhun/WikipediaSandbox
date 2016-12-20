@@ -20,6 +20,7 @@ public:
         TGraphPtr ip_graph,
         TTopologyPtr ip_topology,
         TDescriptionPtr ip_description);
+    ~UiController();
 
     const Graphs::Graph& GetGraph() const;
     const Graphs::TGraphTopology& GetTopology() const;
@@ -30,12 +31,15 @@ public:
 
     void SetVisibleRegion(const std::pair<Geometry::Point2d, Geometry::Point2d>& i_region);
 
+    double GetPointRadius() const;
 private:
     TGraphPtr mp_graph;
-    TTopologyPtr mp_topology;
     TDescriptionPtr mp_description;
 
-    std::vector<Geometry::Point2d> m_topology_points;
+
+    class _ClusterizationInfo;
+    std::unique_ptr<_ClusterizationInfo> mp_clusterization;
+
     std::pair<Geometry::Point2d, Geometry::Point2d> m_topology_bounding_box;
-    double m_current_scale;
+    double m_current_zoom_factor;
 };
