@@ -91,7 +91,7 @@ public:
     const Graphs::TGraphTopology& GetBaseGraphTopology() const
     {
         return m_base_topology;
-}
+    }
 
     const std::vector<Geometry::Point2d>& GetBaseGraphTopologyPoints() const
     {
