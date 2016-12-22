@@ -71,6 +71,21 @@ namespace
         std::transform(i_map.begin(), i_map.end(), std::back_inserter(result), [&i_map](const std::pair<K, V>& i_el) {return i_el.second; });
         return std::move(result);
     }
+
+    template<typename K, typename V>
+    const V& _GetMapElementCorrespondingToRange(const std::map<K, V>& i_map, const K& i_key)
+    {
+        for (auto it = i_map.begin(); it != i_map.end(); ++it)
+        {
+            auto next_it = std::next(it);
+            if (next_it == i_map.end())
+                return it->second;
+
+            if (it->first <= i_key && i_key <= next_it->first)
+                return it->second;
+        }
+        throw std::logic_error("Invalid input");
+    }
 }
 
 UiController::UiController(
@@ -111,7 +126,7 @@ const std::vector<Geometry::Point2d>& UiController::GetTopologyPoints() const
 
 const std::pair<Geometry::Point2d, Geometry::Point2d>& UiController::GetTopologyBoundingBox() const
 {
-    static auto box = Geometry::GetPointsBoundaries(m_clusterization.crbegin()->second->m_topology_points);
+    static auto box = Geometry::GetPointsBoundaries(m_clusterization.cbegin()->second->m_topology_points);
     return box;
 }
 
@@ -125,49 +140,45 @@ void UiController::SetVisibleRegion(const std::pair<Geometry::Point2d, Geometry:
 
 double UiController::GetPointRadius() const
 {
-    size_t zoom_factor_10(m_current_zoom_factor * 10);
-    std::cout << "zoom_factor_10: " << zoom_factor_10 << std::endl;
-    for (auto it = m_zoom_to_point_radius.cbegin(); it != m_zoom_to_point_radius.cend(); ++it)
-        if (zoom_factor_10 > it->first && (std::next(it) == m_zoom_to_point_radius.cend() || zoom_factor_10 < std::next(it)->first))
-        {
-            std::cout << "Point radius: " << it->second << std::endl;
-            return it->second;
-        }
-    throw std::logic_error("invalid zoom factor");
+    size_t zoom_factor_10 = m_current_zoom_factor * 10;
+    return _GetMapElementCorrespondingToRange(m_zoom_to_point_radius, zoom_factor_10);
 }
 
 void UiController::_GenerateClusterizations()
 {
     m_zoom_to_point_radius = 
     {
-        {1, 250}, {5, 500}, {10, 1250}, {15, 2500}, {20, 7500}
+        {1, 500}, {3, 1250}, {5, 2500}, {8, 5000}, {10, 10000}, {15, 20000}, {20, 50000}
     };
 
     auto base_graph_size = mp_graph->GetVertices().size();
     
     const std::map<size_t, size_t> g_cluster_sizes = { 
         {1, base_graph_size },
-        {5, base_graph_size / 4}, 
-        {10, base_graph_size / 16}, 
-        {15, base_graph_size / 64}, 
+        {3, base_graph_size / 16},
+        {5, base_graph_size / 64}, 
+        {8, base_graph_size / 128},
+        {10, base_graph_size / 256}, 
+        {15, base_graph_size / 128}, 
         {20, base_graph_size / 256}
     };
 
     for (const auto& e : g_cluster_sizes)
         m_clusterization[e.first] = std::make_unique<_GraphInfo>();
 
-    m_clusterization.rbegin()->second->mp_graph = mp_graph;
-    m_clusterization.rbegin()->second->mp_description = mp_description;
+    m_clusterization.begin()->second->mp_graph = mp_graph;
+    m_clusterization.begin()->second->mp_description = mp_description;
 
-    for (auto it = ++m_clusterization.rbegin(); it != m_clusterization.rend(); ++it)
+    for (auto it = ++m_clusterization.begin(); it != m_clusterization.end(); ++it)
     {
         auto number_of_vertices = g_cluster_sizes.at(it->first);
         it->second->mp_clusterization = GraphClusterization::CreateRandomClusterization(*std::prev(it)->second->mp_graph.get(), number_of_vertices);
         it->second->mp_graph = it->second->mp_clusterization->GetClusterGraph();
+        it->second->mp_description = std::make_unique<TGraphDescription>();
     }
 
-    m_clusterization.begin()->second->mp_topology = std::make_shared<Graphs::TGraphTopology>(_GenerateRandomGraphPoints(*m_clusterization.begin()->second->mp_graph.get()));
-    for (auto it = ++m_clusterization.begin(); it != m_clusterization.end(); ++it)
+    m_clusterization.rbegin()->second->mp_topology = std::make_shared<Graphs::TGraphTopology>(_GenerateRandomGraphPoints(*m_clusterization.begin()->second->mp_graph.get()));
+    for (auto it = ++m_clusterization.rbegin(); it != m_clusterization.rend(); ++it)
     {
         it->second->mp_topology = std::make_shared<Graphs::TGraphTopology>(_GenerateRandomGraphPointsBasedOnClusterization(*std::prev(it)->second->mp_clusterization.get(), *std::prev(it)->second->mp_topology.get()));
         it->second->m_topology_points = _RetrieveMapValues(*it->second->mp_topology.get());
@@ -176,9 +187,6 @@ void UiController::_GenerateClusterizations()
 
 const UiController::_GraphInfo& UiController::_GetAppropriateGraph(double i_zoom_factor) const
 {
-    size_t zoom_factor_10(i_zoom_factor * 10);
-    for (auto it = m_clusterization.cbegin(); it != m_clusterization.cend(); ++it)
-        if (zoom_factor_10 > it->first && (std::next(it) == m_clusterization.cend() || zoom_factor_10 < std::next(it)->first))
-            return *it->second.get();
-    throw std::logic_error("invalid zoom factor");
+    size_t zoom_factor_10 = i_zoom_factor * 10;
+    return *_GetMapElementCorrespondingToRange(m_clusterization, zoom_factor_10).get();
 }
