@@ -1,7 +1,7 @@
 #include "UiController.h"
 
 #include "../Libraries/Geometry/Utils.h"
-#include "../Libraries/Geometry/TopologySimple.h"
+#include "../Libraries/Geometry/TopologyGridBased.h"
 
 #include "../Libraries/GraphClusterization/Clusterization.h"
 #include "../Libraries/GraphClusterization/RandomClusterization.h"
@@ -178,11 +178,11 @@ void UiController::_GenerateClusterizations()
         it->second->mp_description = std::make_unique<TGraphDescription>();
     }
 
-    m_clusterization.rbegin()->second->mp_topology = Geometry::CreateSimpleTopology(_GenerateRandomGraphPoints(*m_clusterization.begin()->second->mp_graph.get()));
+    m_clusterization.rbegin()->second->mp_topology = Geometry::CreateGridBasedTopology(_GenerateRandomGraphPoints(*m_clusterization.begin()->second->mp_graph.get()));
     for (auto it = ++m_clusterization.rbegin(); it != m_clusterization.rend(); ++it)
     {
         auto graph_topology = _GenerateRandomGraphPointsBasedOnClusterization(*std::prev(it)->second->mp_clusterization.get(), std::prev(it)->second->mp_topology->GetPoints());
-        it->second->mp_topology = Geometry::CreateSimpleTopology(graph_topology);
+        it->second->mp_topology = Geometry::CreateGridBasedTopology(graph_topology);
     }
 }
 

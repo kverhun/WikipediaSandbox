@@ -284,9 +284,14 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
     const size_t point_radius = std::max(radius_screen.x(), radius_screen.y());
 
 
-    auto points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPoints(), m_current_region);
+    auto points_to_draw = mp_scene->GetTopology().GetPointsInRectangle(Geometry::Rectangle2d(m_current_region.first, m_current_region.second));
+    std::vector<Geometry::Point2d> points_to_draw_vector;
+    points_to_draw_vector.reserve(points_to_draw.size());
+    for (const auto& pt : points_to_draw)
+        points_to_draw_vector.push_back(pt.second);
+    
     if (!points_to_draw.empty())
-        draw_points_on_screen(points_to_draw, painter, g_nodes_color, point_radius);
+        draw_points_on_screen(points_to_draw_vector, painter, g_nodes_color, point_radius);
 
     std::cout << "points_to_draw.size(): " << points_to_draw.size() << std::endl;
 

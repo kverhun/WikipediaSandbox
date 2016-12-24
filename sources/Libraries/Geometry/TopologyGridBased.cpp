@@ -79,6 +79,10 @@ namespace
                 m_y_cells[i] = y_min + i * y_cell_size;
             }
 
+            for (size_t x = 0; x < m_x_cells.size(); ++x)
+                for (size_t y = 0; y < m_y_cells.size(); ++y)
+                    m_grid_content.insert({ {x,y},{} });
+
             for (const auto& pt : m_points)
             {
                 auto cell_id = _GetPointCell(pt.second);
