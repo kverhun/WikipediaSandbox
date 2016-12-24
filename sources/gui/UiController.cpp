@@ -1,6 +1,7 @@
 #include "UiController.h"
 
 #include "../Libraries/Geometry/Utils.h"
+#include "../Libraries/Geometry/TopologySimple.h"
 
 #include "../Libraries/GraphClusterization/Clusterization.h"
 #include "../Libraries/GraphClusterization/RandomClusterization.h"
@@ -111,7 +112,7 @@ const Graphs::Graph& UiController::GetGraph() const
 
 const Graphs::TGraphTopology& UiController::GetTopology() const
 {
-    return *_GetAppropriateGraph(m_current_zoom_factor).mp_topology.get();
+    return _GetAppropriateGraph(m_current_zoom_factor).mp_topology->GetPoints();
 }
 
 const TGraphDescription& UiController::GetGraphDescription() const
@@ -121,12 +122,12 @@ const TGraphDescription& UiController::GetGraphDescription() const
 
 const std::vector<Geometry::Point2d>& UiController::GetTopologyPoints() const
 {
-    return _GetAppropriateGraph(m_current_zoom_factor).m_topology_points;
+    return _GetAppropriateGraph(m_current_zoom_factor).mp_topology->GetPointList();
 }
 
 const std::pair<Geometry::Point2d, Geometry::Point2d>& UiController::GetTopologyBoundingBox() const
 {
-    static auto box = Geometry::GetPointsBoundaries(m_clusterization.cbegin()->second->m_topology_points);
+    static auto box = Geometry::GetPointsBoundaries(m_clusterization.cbegin()->second->mp_topology->GetPointList());
     return box;
 }
 
@@ -177,11 +178,11 @@ void UiController::_GenerateClusterizations()
         it->second->mp_description = std::make_unique<TGraphDescription>();
     }
 
-    m_clusterization.rbegin()->second->mp_topology = std::make_shared<Graphs::TGraphTopology>(_GenerateRandomGraphPoints(*m_clusterization.begin()->second->mp_graph.get()));
+    m_clusterization.rbegin()->second->mp_topology = Geometry::CreateSimpleTopology(_GenerateRandomGraphPoints(*m_clusterization.begin()->second->mp_graph.get()));
     for (auto it = ++m_clusterization.rbegin(); it != m_clusterization.rend(); ++it)
     {
-        it->second->mp_topology = std::make_shared<Graphs::TGraphTopology>(_GenerateRandomGraphPointsBasedOnClusterization(*std::prev(it)->second->mp_clusterization.get(), *std::prev(it)->second->mp_topology.get()));
-        it->second->m_topology_points = _RetrieveMapValues(*it->second->mp_topology.get());
+        auto graph_topology = _GenerateRandomGraphPointsBasedOnClusterization(*std::prev(it)->second->mp_clusterization.get(), std::prev(it)->second->mp_topology->GetPoints());
+        it->second->mp_topology = Geometry::CreateSimpleTopology(graph_topology);
     }
 }
 

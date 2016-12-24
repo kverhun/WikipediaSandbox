@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Libraries/Geometry/Point2d.h"
+#include "../Libraries/Geometry/ITopology.h"
 
 #include "../Libraries/Graphs/Graph.h"
 #include "../Libraries/Graphs/Topology.h"
@@ -41,10 +42,9 @@ private:
     struct _GraphInfo
     {
         TGraphPtr mp_graph;
-        TTopologyPtr mp_topology;
+        std::unique_ptr<Geometry::ITopology> mp_topology;
         TDescriptionPtr mp_description;
         std::unique_ptr<GraphClusterization::Clusterization> mp_clusterization;
-        std::vector<Geometry::Point2d> m_topology_points;
     };
     const _GraphInfo& _GetAppropriateGraph(double i_zoom_factor) const;
 

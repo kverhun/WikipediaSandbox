@@ -11,5 +11,7 @@ add_library(Geometry SHARED
     Rectangle2d.h
     Rectangle2d.cpp
     ITopology.h
+    TopologySimple.h
+    TopologySimple.cpp
 )
 target_compile_definitions(Geometry PRIVATE GEOMETRY_LIBRARY)
