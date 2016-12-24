@@ -110,9 +110,9 @@ const Graphs::Graph& UiController::GetGraph() const
     return *_GetAppropriateGraph(m_current_zoom_factor).mp_graph.get();
 }
 
-const Graphs::TGraphTopology& UiController::GetTopology() const
+const Geometry::ITopology& UiController::GetTopology() const
 {
-    return _GetAppropriateGraph(m_current_zoom_factor).mp_topology->GetPoints();
+    return *_GetAppropriateGraph(m_current_zoom_factor).mp_topology.get();
 }
 
 const TGraphDescription& UiController::GetGraphDescription() const

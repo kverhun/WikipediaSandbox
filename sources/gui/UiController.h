@@ -27,7 +27,7 @@ public:
     ~UiController();
 
     const Graphs::Graph& GetGraph() const;
-    const Graphs::TGraphTopology& GetTopology() const;
+    const Geometry::ITopology& GetTopology() const;
     const TGraphDescription& GetGraphDescription() const;
 
     const std::vector<Geometry::Point2d>& GetTopologyPoints() const;

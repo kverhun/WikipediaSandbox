@@ -65,7 +65,7 @@ public:
         return m_controller.GetTopologyPoints();
     }
 
-    const Graphs::TGraphTopology& GetTopology() const
+    const Geometry::ITopology& GetTopology() const
     {
         return m_controller.GetTopology();
     }
@@ -76,9 +76,9 @@ public:
 
         for (const auto& edge : m_controller.GetGraph().GetEdges())
         {
-            auto it_first = m_controller.GetTopology().find(edge.first);
-            auto it_second = m_controller.GetTopology().find(edge.second);
-            if (it_first == m_controller.GetTopology().end() || it_second == m_controller.GetTopology().end())
+            auto it_first = m_controller.GetTopology().GetPoints().find(edge.first);
+            auto it_second = m_controller.GetTopology().GetPoints().find(edge.second);
+            if (it_first == m_controller.GetTopology().GetPoints().end() || it_second == m_controller.GetTopology().GetPoints().end())
                 continue;
 
             Point2d pt_from(it_first->second);
@@ -137,10 +137,10 @@ public:
         if (m_picked_vertexes.empty())
             return highlighted_segments;
 
-        auto point_from = m_controller.GetTopology().at(m_picked_vertexes.front());
+        auto point_from = m_controller.GetTopology().GetPoints().at(m_picked_vertexes.front());
 
         for (const auto& e : m_highlighted_edges)
-            highlighted_segments.emplace_back(point_from, m_controller.GetTopology().at(e.second));
+            highlighted_segments.emplace_back(point_from, m_controller.GetTopology().GetPoints().at(e.second));
 
         return highlighted_segments;
     }
@@ -152,14 +152,14 @@ public:
             for (const auto& v : c)
             {
                 std::string description = "---";
-                // temporary check for not written descriptions (due to encoding problems)
+                // temporary check for not written descriptions (due to enc oding problems)
                 try
                 {
                     description = m_controller.GetGraphDescription().at(v);
                 }
                 catch (...)
                 { }
-                res.emplace_back(m_controller.GetTopology().at(v), description);
+                res.emplace_back(m_controller.GetTopology().GetPoints().at(v), description);
             }
         return res;
     }
@@ -187,7 +187,7 @@ private:
     {
         std::vector<Geometry::Point2d> points;
         for (auto v : i_vertices)
-            points.push_back(m_controller.GetTopology().at(v));
+            points.push_back(m_controller.GetTopology().GetPoints().at(v));
         return points;
     }
 
@@ -363,7 +363,7 @@ Graphs::Graph::TVertex SceneWidget::_GetVertexUnderCursor(const QPoint& i_point_
     auto screen_pos = i_point_screen;
     auto world_pos = _TransformPointFromWidgetToWorld(screen_pos);
 
-    auto it_point_closest_to_pointer = std::min_element(mp_scene->GetTopology().begin(), mp_scene->GetTopology().end(),
+    auto it_point_closest_to_pointer = std::min_element(mp_scene->GetTopology().GetPoints().begin(), mp_scene->GetTopology().GetPoints().end(),
         [world_pos](const std::pair<Graph::TVertex, Point2d>& i_entry1, const std::pair<Graph::TVertex, Point2d>& i_entry2)
     {
         return Geometry::DistanceSquare(world_pos, i_entry1.second) < Geometry::DistanceSquare(world_pos, i_entry2.second);
