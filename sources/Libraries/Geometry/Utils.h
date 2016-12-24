@@ -16,4 +16,6 @@ namespace Geometry
     double GEOMETRY_API DistanceSquare(const Point2d& i_point1, const Point2d& i_point2);
 
     std::pair<double, double> GEOMETRY_API GetRegionsFraction(const std::pair<Point2d, Point2d>& i_first_region, const std::pair<Point2d, Point2d>& i_second_region);
+
+    bool GEOMETRY_API AreEqual2d(const Point2d& i_point1, const Point2d& i_point2);
 }

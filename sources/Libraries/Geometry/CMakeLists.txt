@@ -8,5 +8,7 @@ add_library(Geometry SHARED
     Matrix2d.cpp
     Utils.h
     Utils.cpp
+    Rectangle2d.h
+    Rectangle2d.cpp
 )
 target_compile_definitions(Geometry PRIVATE GEOMETRY_LIBRARY)
