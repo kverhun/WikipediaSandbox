@@ -16,3 +16,10 @@ const Point2d& Rectangle2d::GetPointMax() const
 {
     return m_point_max;
 }
+
+bool Rectangle2d::DoesContainPoint(const Point2d& i_point) const
+{
+    bool contains_x = (m_point_min.GetX() < i_point.GetX() && i_point.GetX() < m_point_max.GetX());
+    bool contains_y = (m_point_min.GetY() < i_point.GetY() && i_point.GetY() < m_point_max.GetY());
+    return contains_x && contains_y;
+}
