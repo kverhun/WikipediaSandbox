@@ -2,6 +2,7 @@
 
 #include "../Geometry/ITopology.h"
 #include "../Geometry/TopologySimple.h"
+#include "../Geometry/TopologyGridBased.h"
 
 #include <algorithm>
 
@@ -57,6 +58,31 @@ namespace
 TEST_CASE("TopologySimple")
 {
     auto p_topology = Geometry::CreateSimpleTopology(_GeneratePointsFromPointList(g_test_points1));
+    SECTION("Test1")
+    {
+        REQUIRE(_ComparePointsToIDList(p_topology->GetPointsInRectangle(g_test_rectangle_11), g_test_ids_11));
+    }
+    SECTION("Test2")
+    {
+        REQUIRE(_ComparePointsToIDList(p_topology->GetPointsInRectangle(g_test_rectangle_12), g_test_ids_12));
+    }
+    SECTION("Test3")
+    {
+        REQUIRE(_ComparePointsToIDList(p_topology->GetPointsInRectangle(g_test_rectangle_13), g_test_ids_13));
+    }
+    SECTION("Test4")
+    {
+        REQUIRE(_ComparePointsToIDList(p_topology->GetPointsInRectangle(g_test_rectangle_14), g_test_ids_14));
+    }
+    SECTION("Test5")
+    {
+        REQUIRE(_ComparePointsToIDList(p_topology->GetPointsInRectangle(g_test_rectangle_15), g_test_ids_15));
+    }
+}
+
+TEST_CASE("TopologyGridBased")
+{
+    auto p_topology = Geometry::CreateGridBasedTopology(_GeneratePointsFromPointList(g_test_points1));
     SECTION("Test1")
     {
         REQUIRE(_ComparePointsToIDList(p_topology->GetPointsInRectangle(g_test_rectangle_11), g_test_ids_11));

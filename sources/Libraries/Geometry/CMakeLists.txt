@@ -13,5 +13,7 @@ add_library(Geometry SHARED
     ITopology.h
     TopologySimple.h
     TopologySimple.cpp
+    TopologyGridBased.h
+    TopologyGridBased.cpp
 )
 target_compile_definitions(Geometry PRIVATE GEOMETRY_LIBRARY)
