@@ -84,7 +84,7 @@ public:
             Point2d pt_from(it_first->second);
             Point2d pt_to(it_second->second);
 
-            if (i_rectangle.DoesContainPoint(pt_from) || i_rectangle.DoesContainPoint(pt_to))
+            if (i_rectangle.DoesContainPoint(pt_from) && i_rectangle.DoesContainPoint(pt_to))
                 segments.emplace_back(pt_from, pt_to);
         }
         return segments;
