@@ -70,7 +70,7 @@ public:
         return m_controller.GetTopology();
     }
 
-    std::vector<std::pair<Point2d, Point2d>> GetSegments() const
+    std::vector<std::pair<Point2d, Point2d>> GetSegments(const Geometry::Rectangle2d& i_rectangle) const
     {
         std::vector<std::pair<Point2d, Point2d>> segments;
 
@@ -83,9 +83,10 @@ public:
 
             Point2d pt_from(it_first->second);
             Point2d pt_to(it_second->second);
-            segments.emplace_back(pt_from, pt_to);
-        }
 
+            if (i_rectangle.DoesContainPoint(pt_from) || i_rectangle.DoesContainPoint(pt_to))
+                segments.emplace_back(pt_from, pt_to);
+        }
         return segments;
     }
 
@@ -272,7 +273,7 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
 
     QPainter painter(this);
 
-    draw_segments_on_screen(mp_scene->GetSegments(), painter, g_edge_color);
+    draw_segments_on_screen(mp_scene->GetSegments(Geometry::Rectangle2d(m_current_region.first, m_current_region.second)), painter, g_edge_color);
 
     //auto radius_x_screen = QPoint(g_point_radius, 0);
     //auto radius_x_world = _TransformPointFromWidgetToWorld(radius_x_screen) - _TransformPointFromWidgetToWorld(QPoint(0, 0));
