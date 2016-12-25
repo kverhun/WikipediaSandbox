@@ -25,6 +25,8 @@ public:
     using TMessageDelegate = std::function<void(const std::string&)>;
     void SetMouseMoveMessageDelegate(TMessageDelegate i_message_delegate);
 
+    void SetDrawEdges(bool i_draw);
+
 private:
     void paintEvent(QPaintEvent* ip_event) override;
     void wheelEvent(QWheelEvent* ip_event) override;
@@ -55,4 +57,6 @@ private:
     std::pair<Geometry::Point2d, Geometry::Point2d> m_current_region;
 
     TMessageDelegate m_message_delegate = nullptr;
+
+    bool m_draw_edges = false;
 };

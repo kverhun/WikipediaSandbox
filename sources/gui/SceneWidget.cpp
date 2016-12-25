@@ -243,6 +243,12 @@ void SceneWidget::SetMouseMoveMessageDelegate(SceneWidget::TMessageDelegate i_me
     m_message_delegate = i_message_delegate;
 }
 
+void SceneWidget::SetDrawEdges(bool i_draw)
+{
+    m_draw_edges = i_draw;
+    update();
+}
+
 void SceneWidget::paintEvent(QPaintEvent* ip_event)
 {
 
@@ -273,7 +279,8 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
 
     QPainter painter(this);
 
-    draw_segments_on_screen(mp_scene->GetSegments(Geometry::Rectangle2d(m_current_region.first, m_current_region.second)), painter, g_edge_color);
+    if (m_draw_edges)
+        draw_segments_on_screen(mp_scene->GetSegments(Geometry::Rectangle2d(m_current_region.first, m_current_region.second)), painter, g_edge_color);
 
     //auto radius_x_screen = QPoint(g_point_radius, 0);
     //auto radius_x_world = _TransformPointFromWidgetToWorld(radius_x_screen) - _TransformPointFromWidgetToWorld(QPoint(0, 0));

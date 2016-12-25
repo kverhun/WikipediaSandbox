@@ -12,6 +12,7 @@
 #include <QMainWindow>
 #include <QLayout>
 #include <QStatusBar>
+#include <QCheckBox>
 #include <QString>
 #include <QDesktopWidget>
 
@@ -58,7 +59,7 @@ int main(int i_argc, char** i_argv)
     QApplication app(i_argc, i_argv);
     QMainWindow wnd;
     wnd.setContentsMargins(5, 5, 5, 5);
-    wnd.resize(QDesktopWidget().availableGeometry(&wnd).size() * 0.7);
+    
 
     if (i_argc < 2)
         return 1;
@@ -70,13 +71,37 @@ int main(int i_argc, char** i_argv)
 
     auto* p_scene_widget = new SceneWidget(&wnd, std::make_unique<UiController>(p_graph, p_topology, p_description));
 
-    wnd.setCentralWidget(p_scene_widget);
+    {
+        auto* p_scene_and_panel = new QWidget;
+        auto* p_hor_layout = new QHBoxLayout;
+        p_scene_and_panel->setLayout(p_hor_layout);
+        
+        p_hor_layout->addWidget(p_scene_widget, 1);
+
+        auto* p_right_panel_widget = new QWidget;
+
+        auto* p_right_panel = new QVBoxLayout;
+        auto* p_checkbox_draw_edges = new QCheckBox;
+        p_checkbox_draw_edges->setText("Draw links always");
+        p_scene_widget->SetDrawEdges(p_checkbox_draw_edges->isChecked());
+        QObject::connect(p_checkbox_draw_edges, &QCheckBox::stateChanged, [p_scene_widget, p_checkbox_draw_edges](int) 
+        {
+            p_scene_widget->SetDrawEdges(p_checkbox_draw_edges->isChecked());
+        });
+        p_right_panel->addWidget(p_checkbox_draw_edges);
+        p_right_panel_widget->setLayout(p_right_panel);
+
+        p_hor_layout->addWidget(p_right_panel_widget);
+
+        wnd.setCentralWidget(p_scene_and_panel);
+    }
+
 
     auto* p_status_bar = new QStatusBar;
     p_scene_widget->SetMouseMoveMessageDelegate([p_status_bar](const std::string& i_message) {p_status_bar->showMessage(QString::fromStdString(i_message)); });
 
     wnd.setStatusBar(p_status_bar);
-
+    wnd.resize(QDesktopWidget().availableGeometry(&wnd).size() * 0.7);
     wnd.show();
 
     auto exit_code = app.exec();
