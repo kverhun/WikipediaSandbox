@@ -252,38 +252,35 @@ void SceneWidget::SetDrawEdges(bool i_draw)
 void SceneWidget::paintEvent(QPaintEvent* ip_event)
 {
 
-    auto draw_points_on_screen = [this](const std::vector<Geometry::Point2d>& i_points_to_draw, QPainter& io_painter, QColor i_color, int i_radius)
+    auto draw_points_on_screen = [this](const std::vector<Geometry::Point2d>& i_points_to_draw, QColor i_color, int i_radius)
     {
+        QPainter painter(this);
         std::vector<QPoint> points_to_draw_screen;
         points_to_draw_screen.reserve(i_points_to_draw.size());
 
         for (const auto& pt : i_points_to_draw)
             points_to_draw_screen.push_back(_TransformPointFromWorldToWidget(pt));
 
-        io_painter.setBrush(i_color);
+        painter.setBrush(i_color);
 
         for (const auto& pt : points_to_draw_screen)
-            io_painter.drawEllipse(pt, i_radius, i_radius);
+            painter.drawEllipse(pt, i_radius, i_radius);
     };
     
-    auto draw_segments_on_screen = [this](const std::vector<std::pair<Point2d, Point2d>>& i_segments, QPainter& io_painter, QColor i_color)
+    auto draw_segments_on_screen = [this](const std::vector<std::pair<Point2d, Point2d>>& i_segments, QColor i_color)
     {
+        QPainter painter(this);
         std::vector<std::pair<QPoint, QPoint>> segments_to_draw_screen;
         for (const auto& segment : i_segments)
             segments_to_draw_screen.emplace_back(_TransformPointFromWorldToWidget(segment.first), _TransformPointFromWorldToWidget(segment.second));
 
-        io_painter.setPen(i_color);
+        painter.setPen(i_color);
         for (const auto& segment : segments_to_draw_screen)
-            io_painter.drawLine(segment.first, segment.second);
+            painter.drawLine(segment.first, segment.second);
     };
 
-    QPainter painter(this);
-
     if (m_draw_edges)
-        draw_segments_on_screen(mp_scene->GetSegments(Geometry::Rectangle2d(m_current_region.first, m_current_region.second)), painter, g_edge_color);
-
-    //auto radius_x_screen = QPoint(g_point_radius, 0);
-    //auto radius_x_world = _TransformPointFromWidgetToWorld(radius_x_screen) - _TransformPointFromWidgetToWorld(QPoint(0, 0));
+        draw_segments_on_screen(mp_scene->GetSegments(Geometry::Rectangle2d(m_current_region.first, m_current_region.second)), g_edge_color);
 
     auto radius = mp_controller->GetPointRadius();
     Point2d radius_world{ radius, 0 };
@@ -299,35 +296,36 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
         points_to_draw_vector.push_back(pt.second);
     
     if (!points_to_draw.empty())
-        draw_points_on_screen(points_to_draw_vector, painter, g_nodes_color, point_radius);
+        draw_points_on_screen(points_to_draw_vector, g_nodes_color, point_radius);
 
     std::cout << "points_to_draw.size(): " << points_to_draw.size() << std::endl;
 
     auto selected_points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPickedPoints(), m_current_region);
     if (!selected_points_to_draw.empty())
-        draw_points_on_screen(selected_points_to_draw, painter, g_picked_node_color, point_radius);
+        draw_points_on_screen(selected_points_to_draw, g_picked_node_color, point_radius);
 
     auto highlighted_points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetHighlightedPoints(), m_current_region);
     if (!highlighted_points_to_draw.empty())
-        draw_points_on_screen(highlighted_points_to_draw, painter, g_adjacent_node_color, point_radius);
+        draw_points_on_screen(highlighted_points_to_draw, g_adjacent_node_color, point_radius);
 
     auto highlighted_segments = mp_scene->GetHighlightedSegments();
-    draw_segments_on_screen(highlighted_segments, painter, g_highlighted_edge_color);
+    draw_segments_on_screen(highlighted_segments, g_highlighted_edge_color);
 
-    auto draw_text_near_point = [this](const Point2d& i_point, const QString& i_str, QPainter& io_painter, QColor i_color)
+    auto draw_text_near_point = [this](const Point2d& i_point, const QString& i_str, QColor i_color)
     {
+        QPainter painter(this);
         auto point_screen = _TransformPointFromWorldToWidget(i_point);
         QPoint text_point(point_screen.x() - 2 * g_highlighted_point_radius, point_screen.y() - 2 * g_highlighted_point_radius);
 
         QFont font("Times", 15);
-        io_painter.setPen(i_color);
-        io_painter.setFont(font);
-        io_painter.drawText(text_point, i_str);
+        painter.setPen(i_color);
+        painter.setFont(font);
+        painter.drawText(text_point, i_str);
     };
 
     auto titles_to_draw = mp_scene->GetTitlesToDraw();
     for (const auto& title : titles_to_draw)
-        draw_text_near_point(title.first, QString::fromStdString(title.second), painter, g_text_color);
+        draw_text_near_point(title.first, QString::fromStdString(title.second), g_text_color);
 }
 
 void SceneWidget::wheelEvent(QWheelEvent* ip_event)
