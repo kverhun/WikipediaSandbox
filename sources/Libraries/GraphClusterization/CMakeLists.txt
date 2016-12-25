@@ -6,6 +6,10 @@ add_library(GraphClusterization SHARED
     Clusterization.cpp
     RandomClusterization.h
     RandomClusterization.cpp
+    GreedyClusterization.h
+    GreedyClusterization.cpp
+    BFS.h
+    BFS.cpp
 )
 target_compile_definitions(GraphClusterization PRIVATE GRAPHCLUSTERIZATION_LIBRARY)
 target_link_libraries(GraphClusterization Graphs)
