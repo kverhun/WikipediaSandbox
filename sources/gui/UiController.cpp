@@ -15,9 +15,9 @@ namespace
 {
     using Geometry::Point2d;
 
-    const int g_xmin = -100000;
+    const int g_xmin = -1000000;
     const int g_ymin = g_xmin;
-    const int g_xmax = 100000;
+    const int g_xmax = 1000000;
     const int g_ymax = g_xmax;
 
     const size_t g_number_of_clusters = 50;
