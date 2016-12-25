@@ -4,7 +4,7 @@
 
 namespace Graphs
 {
-    Graph::TVertices BfsGraphFromVertex(const Graph& i_graph, const Graph::TVertex& i_vertex_from)
+    Graph::TVertices BfsGraphFromVertex(const Graph& i_graph, const Graph::TVertex& i_vertex_from, size_t i_vertex_number_limit)
     {
         Graph::TVertices traverse;
         std::set<Graph::TVertex> visited_during_current_traverse;
@@ -15,6 +15,8 @@ namespace Graphs
             auto current_vertex = q.front();
             q.pop();
             traverse.push_back(current_vertex);
+            if (traverse.size() >= i_vertex_number_limit)
+                break;
             visited_during_current_traverse.insert(current_vertex);
             auto edges_from_current_vertex = i_graph.GetEdgesFromVertex(current_vertex);
             for (const auto& e : edges_from_current_vertex)
