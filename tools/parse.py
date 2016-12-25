@@ -12,9 +12,12 @@ def remove_description_from_reference(str):
 
 
 def get_references_from_text(str):
-    refs = [s[2:len(s)-2] for s in re.findall(R'\[\[[^\]]*\]\]', str)]
-    refs = [remove_description_from_reference(ref) for ref in refs]
-    return refs
+    try:
+        refs = [s[2:len(s)-2] for s in re.findall(R'\[\[[^\]]*\]\]', str)]
+        refs = [remove_description_from_reference(ref) for ref in refs]
+        return refs
+    except:
+        return []
 
 
 def parse_xml(xml_file, max_pages_number):
@@ -51,7 +54,7 @@ def parse_xml(xml_file, max_pages_number):
 
 
 def write_parsing_result_to_csv(reference_list, file_name):
-    with open(file_name, 'w') as f:
+    with open(file_name, 'a') as f:
         ref_number = 0
         for article, references in reference_list.items():
             line = str(article)
@@ -79,17 +82,21 @@ def write_dictionary_to_csv(dict, file_name):
             except:
                 continue
 
-
-def transform_titles_to_indexes(reference_dictionary):
-    index_to_string_map = {}
-    string_to_index_map = {}
-    references = {}
-    current_index = 1
+def update_maps(reference_dictionary, current_index_to_string_map, current_string_to_index_map):
+    index_to_string_map = current_index_to_string_map
+    string_to_index_map = current_string_to_index_map
+    current_index = len(index_to_string_map)
 
     for key, val in reference_dictionary.items():
         index_to_string_map[current_index] = key
         string_to_index_map[key] = current_index
         current_index += 1
+
+    return index_to_string_map, string_to_index_map
+
+
+def transform_titles_to_indexes(reference_dictionary, string_to_index_map):
+    references = {}
 
     for key, val in reference_dictionary.items():
         try:
@@ -103,24 +110,26 @@ def transform_titles_to_indexes(reference_dictionary):
         except:
             continue
 
-    return references, index_to_string_map, string_to_index_map
+    return references
 
 
 def __main__():
-    xml_file = sys.argv[1]
-    output_file = sys.argv[2]
-    index_to_string_map_file = sys.argv[3]
-    string_to_index_map_file = sys.argv[4]
-
-    print('xml: ', xml_file)
+    output_file = sys.argv[1]
+    index_to_string_map_file = sys.argv[2]
+    string_to_index_map_file = sys.argv[3]
     print('output: ', output_file)
 
-    dict = parse_xml(xml_file, 2000)
+    index_to_string_map = {}
+    string_to_index_map = {}
+    for i in range(4, len(sys.argv)):
+        xml_file = sys.argv[i]
+        print("Parsing: " + xml_file)
+        dict = parse_xml(xml_file, 200000)
+        index_to_string_map, string_to_index_map = update_maps(dict, index_to_string_map, string_to_index_map)
+        index_dict = transform_titles_to_indexes(dict, string_to_index_map)
+        write_parsing_result_to_csv(index_dict, output_file)
 
-    index_dict, index_to_string_map, string_to_index_map = transform_titles_to_indexes(dict)
-    write_parsing_result_to_csv(index_dict, output_file)
     write_dictionary_to_csv(index_to_string_map, index_to_string_map_file)
     write_dictionary_to_csv(string_to_index_map, string_to_index_map_file)
-
 
 __main__()
