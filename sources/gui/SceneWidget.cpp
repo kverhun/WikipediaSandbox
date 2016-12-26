@@ -74,19 +74,19 @@ public:
     {
         std::vector<std::pair<Point2d, Point2d>> segments;
 
-        for (const auto& edge : m_controller.GetGraph().GetEdges())
+        auto points_in_rectangle = m_controller.GetTopology().GetPointsInRectangle(i_rectangle);
+
+        for (const auto& pt : points_in_rectangle)
         {
-            auto it_first = m_controller.GetTopology().GetPoints().find(edge.first);
-            auto it_second = m_controller.GetTopology().GetPoints().find(edge.second);
-            if (it_first == m_controller.GetTopology().GetPoints().end() || it_second == m_controller.GetTopology().GetPoints().end())
-                continue;
-
-            Point2d pt_from(it_first->second);
-            Point2d pt_to(it_second->second);
-
-            if (i_rectangle.DoesContainPoint(pt_from) && i_rectangle.DoesContainPoint(pt_to))
-                segments.emplace_back(pt_from, pt_to);
+            for (const auto& edge : m_controller.GetGraph().GetEdgesFromVertex(pt.first))
+            {
+                auto pt_from = pt.second;
+                auto pt_to = m_controller.GetTopology().GetPoints().find(edge.second)->second;
+                if (i_rectangle.DoesContainPoint(pt_to))
+                    segments.emplace_back(pt_from, pt_to);
+            }
         }
+        std::cout << "Segments: " << segments.size() << std::endl;
         return segments;
     }
 
@@ -261,6 +261,7 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
         for (const auto& pt : i_points_to_draw)
             points_to_draw_screen.push_back(_TransformPointFromWorldToWidget(pt));
 
+        painter.setPen(i_color);
         painter.setBrush(i_color);
 
         for (const auto& pt : points_to_draw_screen)
@@ -318,6 +319,7 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
         QPoint text_point(point_screen.x() - 2 * g_highlighted_point_radius, point_screen.y() - 2 * g_highlighted_point_radius);
 
         QFont font("Times", 15);
+        font.setWeight(QFont::Bold);
         painter.setPen(i_color);
         painter.setFont(font);
         painter.drawText(text_point, i_str);

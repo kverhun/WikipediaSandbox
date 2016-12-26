@@ -3,6 +3,7 @@
 #include "_Library.h"
 
 #include <vector>
+#include <map>
 
 namespace Graphs
 {
@@ -20,8 +21,11 @@ namespace Graphs
         const TEdges&    GetEdges()    const;
 
         TEdges           GetEdgesFromVertex(const TVertex& i_vertex) const;
+
+        void             OptimizeForEdgesRetrieval() const;
     private:
         TVertices m_vertices;
         TEdges    m_edges;
+        mutable std::map<TVertex, TEdges> m_edges_optimized;
     };
 }

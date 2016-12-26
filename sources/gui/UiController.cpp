@@ -5,6 +5,7 @@
 
 #include "../Libraries/GraphClusterization/Clusterization.h"
 #include "../Libraries/GraphClusterization/RandomClusterization.h"
+#include "../Libraries/GraphClusterization/GreedyClusterization.h"
 
 #include <iostream>
 #include <map>
@@ -15,9 +16,9 @@ namespace
 {
     using Geometry::Point2d;
 
-    const int g_xmin = -2000000;
+    const int g_xmin = -4000000;
     const int g_ymin = g_xmin;
-    const int g_xmax = 2000000;
+    const int g_xmax = 4000000;
     const int g_ymax = g_xmax;
 
     const size_t g_number_of_clusters = 50;
@@ -149,22 +150,22 @@ void UiController::_GenerateClusterizations()
 {
     m_zoom_to_point_radius = 
     {
-        {1, 5000}, {3, 15000}, {5, 30000}, {8, 75000}, {10, 125000}, {15, 250000}//, {20, 50000}
+        {1, 5000}, {3, 25000}, {5, 50000}, {8, 100000}//, {10, 250000}//, {15, 500000}//, {20, 375000}
     };
     std::map<size_t, size_t> g_cluster_dims =
     {
-        { 1, 5000 },{ 3, 25000 },{ 5, 100000 },{ 8, 500000 },{ 10, 1000000 }, {15, 2500000}//, {20, 50000}
+        { 1, 5000 },{ 3, 100000 },{ 5, 500000 },{ 8, 1000000 }//,{ 10, 1000000 }//, {15, 2000000}//, {20, 10000000 }
     };
 
     auto base_graph_size = mp_graph->GetVertices().size();
     
     const std::map<size_t, size_t> g_cluster_sizes = { 
         {1, base_graph_size },
-        {3, 15000},
-        {5, 5000}, 
-        {8, 1000},
-        {10, 250}, 
-        {15, 50}//, 
+        {3, base_graph_size / 75},
+        {5, base_graph_size / 1000 },
+        {8, base_graph_size / 7500},
+        //{10, base_graph_size / 25000 },
+        //{15, base_graph_size / 75000},
         //{20, base_graph_size / 256}
     };
 
@@ -177,7 +178,7 @@ void UiController::_GenerateClusterizations()
     for (auto it = ++m_clusterization.begin(); it != m_clusterization.end(); ++it)
     {
         auto number_of_vertices = g_cluster_sizes.at(it->first);
-        it->second->mp_clusterization = GraphClusterization::CreateRandomClusterization(*std::prev(it)->second->mp_graph.get(), number_of_vertices);
+        it->second->mp_clusterization = GraphClusterization::CreateGreedyClusterization(*std::prev(it)->second->mp_graph.get(), number_of_vertices);
         it->second->mp_graph = it->second->mp_clusterization->GetClusterGraph();
         it->second->mp_description = std::make_unique<TGraphDescription>();
     }
