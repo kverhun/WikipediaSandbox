@@ -29,7 +29,7 @@ namespace
 
     const size_t g_margin = 10;
 
-    const double g_zoom_factor = 0.1;
+    const double g_zoom_factor = 0.025;
 
     const std::unique_ptr<Graphs::Graph> gp_random_graph = Graphs::GenerateGraph(10000);
 
@@ -335,7 +335,7 @@ void SceneWidget::wheelEvent(QWheelEvent* ip_event)
     auto fracs = Geometry::GetRegionsFraction(m_current_region, mp_scene->GetBoundingBox());
     auto visible_x_frac = fracs.first;
     auto visible_y_frac = fracs.second;
-    if ((std::min(visible_x_frac, visible_y_frac) <= 0.1 && ip_event->delta() > 0) || (std::max(visible_x_frac, visible_y_frac) >= 2. && ip_event->delta() < 0))
+    if ((std::min(visible_x_frac, visible_y_frac) <= 0.025 && ip_event->delta() > 0) || (std::max(visible_x_frac, visible_y_frac) >= 2. && ip_event->delta() < 0))
     {
         std::cout << "x frac: " << visible_x_frac << "; y_frac: " << visible_y_frac << std::endl;
         std::cout << "Min/max zoom reached" << std::endl;

@@ -15,9 +15,9 @@ namespace
 {
     using Geometry::Point2d;
 
-    const int g_xmin = -1000000;
+    const int g_xmin = -2000000;
     const int g_ymin = g_xmin;
-    const int g_xmax = 1000000;
+    const int g_xmax = 2000000;
     const int g_ymax = g_xmax;
 
     const size_t g_number_of_clusters = 50;
@@ -149,7 +149,11 @@ void UiController::_GenerateClusterizations()
 {
     m_zoom_to_point_radius = 
     {
-        {1, 2000}, {3, 10000}, {5, 30000}, {8, 75000}, {10, 100000}, {15, 400000}//, {20, 50000}
+        {1, 5000}, {3, 15000}, {5, 30000}, {8, 75000}, {10, 125000}, {15, 250000}//, {20, 50000}
+    };
+    std::map<size_t, size_t> g_cluster_dims =
+    {
+        { 1, 5000 },{ 3, 25000 },{ 5, 100000 },{ 8, 500000 },{ 10, 1000000 }, {15, 2500000}//, {20, 50000}
     };
 
     auto base_graph_size = mp_graph->GetVertices().size();
@@ -158,9 +162,9 @@ void UiController::_GenerateClusterizations()
         {1, base_graph_size },
         {3, 15000},
         {5, 5000}, 
-        {8, 200},
-        {10, 50}, 
-        {15, 10}//, 
+        {8, 1000},
+        {10, 250}, 
+        {15, 50}//, 
         //{20, base_graph_size / 256}
     };
 
@@ -181,7 +185,7 @@ void UiController::_GenerateClusterizations()
     m_clusterization.rbegin()->second->mp_topology = Geometry::CreateGridBasedTopology(_GenerateRandomGraphPoints(*m_clusterization.rbegin()->second->mp_graph.get()));
     for (auto it = ++m_clusterization.rbegin(); it != m_clusterization.rend(); ++it)
     {
-        auto graph_topology = _GenerateRandomGraphPointsBasedOnClusterization(*std::prev(it)->second->mp_clusterization.get(), std::prev(it)->second->mp_topology->GetPoints(), m_zoom_to_point_radius.at(std::prev(it)->first));
+        auto graph_topology = _GenerateRandomGraphPointsBasedOnClusterization(*std::prev(it)->second->mp_clusterization.get(), std::prev(it)->second->mp_topology->GetPoints(), g_cluster_dims.at(std::prev(it)->first));
         it->second->mp_topology = Geometry::CreateGridBasedTopology(graph_topology);
     }
 }
