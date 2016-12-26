@@ -44,7 +44,7 @@ namespace
         return _GenerateRandomPointsForVerticesInRectangle(i_graph.GetVertices(), g_xmin, g_ymin, g_xmax, g_ymax);
     }
 
-    Graphs::TGraphTopology _GenerateRandomGraphPointsBasedOnClusterization(const GraphClusterization::Clusterization& i_clusterization, const Graphs::TGraphTopology& i_clusterization_topology)
+    Graphs::TGraphTopology _GenerateRandomGraphPointsBasedOnClusterization(const GraphClusterization::Clusterization& i_clusterization, const Graphs::TGraphTopology& i_clusterization_topology, size_t i_cluster_dim)
     {
         Graphs::TGraphTopology topology;
         
@@ -53,10 +53,10 @@ namespace
             auto cluster = i_clusterization.GetClusterIdForVertex(v);
             auto cluster_point = i_clusterization_topology.at(cluster);
 
-            int xmin = cluster_point.GetX() - g_cluster_dim;
-            int ymin = cluster_point.GetY() - g_cluster_dim;
-            int xmax = cluster_point.GetX() + g_cluster_dim;
-            int ymax = cluster_point.GetY() + g_cluster_dim;
+            int xmin = cluster_point.GetX() - i_cluster_dim;
+            int ymin = cluster_point.GetY() - i_cluster_dim;
+            int xmax = cluster_point.GetX() + i_cluster_dim;
+            int ymax = cluster_point.GetY() + i_cluster_dim;
 
             auto points = _GenerateRandomPointsForVerticesInRectangle({ v }, xmin, ymin, xmax, ymax);
             topology.insert(*points.begin());
@@ -149,19 +149,19 @@ void UiController::_GenerateClusterizations()
 {
     m_zoom_to_point_radius = 
     {
-        {1, 500}, {3, 1250}, {5, 2500}, {8, 5000}, {10, 10000}, {15, 20000}, {20, 50000}
+        {1, 2000}, {3, 10000}, {5, 30000}, {8, 75000}, {10, 100000}, {15, 400000}//, {20, 50000}
     };
 
     auto base_graph_size = mp_graph->GetVertices().size();
     
     const std::map<size_t, size_t> g_cluster_sizes = { 
         {1, base_graph_size },
-        {3, base_graph_size / 16},
-        {5, base_graph_size / 64}, 
-        {8, base_graph_size / 128},
-        {10, base_graph_size / 256}, 
-        {15, base_graph_size / 128}, 
-        {20, base_graph_size / 256}
+        {3, 15000},
+        {5, 5000}, 
+        {8, 200},
+        {10, 50}, 
+        {15, 10}//, 
+        //{20, base_graph_size / 256}
     };
 
     for (const auto& e : g_cluster_sizes)
@@ -178,10 +178,10 @@ void UiController::_GenerateClusterizations()
         it->second->mp_description = std::make_unique<TGraphDescription>();
     }
 
-    m_clusterization.rbegin()->second->mp_topology = Geometry::CreateGridBasedTopology(_GenerateRandomGraphPoints(*m_clusterization.begin()->second->mp_graph.get()));
+    m_clusterization.rbegin()->second->mp_topology = Geometry::CreateGridBasedTopology(_GenerateRandomGraphPoints(*m_clusterization.rbegin()->second->mp_graph.get()));
     for (auto it = ++m_clusterization.rbegin(); it != m_clusterization.rend(); ++it)
     {
-        auto graph_topology = _GenerateRandomGraphPointsBasedOnClusterization(*std::prev(it)->second->mp_clusterization.get(), std::prev(it)->second->mp_topology->GetPoints());
+        auto graph_topology = _GenerateRandomGraphPointsBasedOnClusterization(*std::prev(it)->second->mp_clusterization.get(), std::prev(it)->second->mp_topology->GetPoints(), m_zoom_to_point_radius.at(std::prev(it)->first));
         it->second->mp_topology = Geometry::CreateGridBasedTopology(graph_topology);
     }
 }
