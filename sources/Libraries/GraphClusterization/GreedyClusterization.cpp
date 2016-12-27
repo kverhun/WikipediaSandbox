@@ -33,7 +33,7 @@ std::unique_ptr<Clusterization> GraphClusterization::CreateGreedyClusterization(
 
         auto current_vertex = *vertices_remained.begin();
         vertices_remained.erase(current_vertex);
-        auto bfs_from_current_vertex = Graphs::BfsGraphFromVertex(i_graph, current_vertex, cluster_size);
+        auto bfs_from_current_vertex = Graphs::BfsGraphFromVertex(i_graph, current_vertex, [cluster_size](size_t i_size, size_t) {return i_size >= cluster_size; });
         for (const auto& v : bfs_from_current_vertex)
         {
             if (vertices_marked.find(v) == vertices_marked.end())

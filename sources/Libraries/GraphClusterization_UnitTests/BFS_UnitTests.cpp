@@ -15,7 +15,12 @@ TEST_CASE("BFS1")
     }
     SECTION("Test2")
     {
-        auto traverse = Graphs::BfsGraphFromVertex(g, 1, 4);
+        auto traverse = Graphs::BfsGraphFromVertex(g, 1, [](size_t i_v_num, size_t) {return i_v_num >= 4; });
+        REQUIRE(traverse == std::vector<Graphs::Graph::TVertex>({ 1, 4, 8, 5 }));
+    }
+    SECTION("Test3")
+    {
+        auto traverse = Graphs::BfsGraphFromVertex(g, 1, [](size_t, size_t i_depth) {return i_depth > 2; });
         REQUIRE(traverse == std::vector<Graphs::Graph::TVertex>({ 1, 4, 8, 5 }));
     }
 }

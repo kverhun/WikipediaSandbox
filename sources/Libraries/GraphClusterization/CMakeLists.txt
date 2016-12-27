@@ -8,6 +8,8 @@ add_library(GraphClusterization SHARED
     RandomClusterization.cpp
     GreedyClusterization.h
     GreedyClusterization.cpp
+    DBScanClusterization.h
+    DBScanClusterization.cpp
     BFS.h
     BFS.cpp
 )
