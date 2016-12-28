@@ -16,6 +16,7 @@ using TGraphDescription = std::map<Graphs::Graph::TVertex, std::string>;
 using TGraphPtr = std::shared_ptr<Graphs::Graph>;
 using TTopologyPtr = std::shared_ptr<Graphs::TGraphTopology>;
 using TDescriptionPtr = std::shared_ptr<TGraphDescription>;
+using TClusterizationsPtr = std::shared_ptr<std::vector<GraphClusterization::TClusterMap>>;
 
 class UiController
 {
@@ -23,7 +24,8 @@ public:
     UiController(
         TGraphPtr ip_graph,
         TTopologyPtr ip_topology,
-        TDescriptionPtr ip_description);
+        TDescriptionPtr ip_description,
+        TClusterizationsPtr ip_clusterizations = nullptr);
     ~UiController();
 
     const Graphs::Graph& GetGraph() const;
@@ -38,7 +40,7 @@ public:
     double GetPointRadius() const;
 
 private:
-    void _GenerateClusterizations();
+    void _GenerateClusterizations(TClusterizationsPtr ip_clusterizations);
     struct _GraphInfo
     {
         TGraphPtr mp_graph;

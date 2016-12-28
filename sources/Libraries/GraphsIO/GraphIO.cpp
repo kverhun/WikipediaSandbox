@@ -51,6 +51,14 @@ namespace
         return std::make_pair(vertex, description);
     }
 
+    std::pair<Graph::TVertex, GraphClusterization::TClusterId> _ReadClusterizationLine(const std::string& i_line)
+    {
+        auto tokens = _Tokenize(i_line);
+        Graph::TVertex v = std::stoi(tokens[0]);
+        GraphClusterization::TClusterId c = std::stoi(tokens[1]);
+        return std::make_pair(v, c);
+    }
+
 }
 
 std::unique_ptr<Graphs::Graph> GraphsIO::ReadGraphFromStream(std::istream& i_stream)
@@ -111,4 +119,28 @@ std::map<Graphs::Graph::TVertex, std::string> GraphsIO::ReadGraphVerticesDescrip
         result.insert(_ReadDescriptionLine(line));
     }
     return result;
+}
+
+GraphClusterization::TClusterMap GraphsIO::ReadClusterizationFromStream(std::istream& i_stream)
+{
+    GraphClusterization::TClusterMap result;
+
+    std::string line;
+    while (!i_stream.eof())
+    {
+        std::getline(i_stream, line);
+        if (line.empty())
+            continue;
+        result.insert(_ReadClusterizationLine(line));
+    }
+
+    return result;
+}
+
+void GraphsIO::WriteClusterizationToStream(const GraphClusterization::TClusterMap& i_clusterization, std::ostream& o_stream)
+{
+    for (const auto& entry : i_clusterization)
+    {
+        o_stream << entry.first << ',' << entry.second << std::endl;
+    }
 }

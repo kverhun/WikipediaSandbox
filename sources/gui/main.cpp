@@ -48,6 +48,21 @@ namespace
             return nullptr;
         return std::make_shared<std::map<Graphs::Graph::TVertex, std::string>>(GraphsIO::ReadGraphVerticesDescriptionFromStream(input_file_stream));
     }
+
+    TClusterizationsPtr _ReadClusterizationsFromFiles(const std::string& i_directory_name, size_t i_number_of_files)
+    {
+        TClusterizationsPtr result = std::make_shared<std::vector<GraphClusterization::TClusterMap>>();
+        for (size_t i = 0; i < i_number_of_files; ++i)
+        {
+            const std::string clusterization_file_full_name = i_directory_name + "/cl_" + std::to_string(i) + ".csv";
+            std::ifstream input_file_stream(clusterization_file_full_name);
+            if (!input_file_stream)
+                result->push_back({});
+            else
+                result->push_back(GraphsIO::ReadClusterizationFromStream(input_file_stream));
+        }
+        return result;
+    }
 }
 
 int main(int i_argc, char** i_argv)
@@ -69,7 +84,11 @@ int main(int i_argc, char** i_argv)
     auto p_topology = _ReadTopologyFromFile(directory_name);
     auto p_description = _ReadDescriptionFromFile(directory_name);
 
-    auto* p_scene_widget = new SceneWidget(&wnd, std::make_unique<UiController>(p_graph, p_topology, p_description));
+    TClusterizationsPtr p_clusterization;
+    if (i_argc > 2)
+        p_clusterization = _ReadClusterizationsFromFiles(directory_name, std::stoi(i_argv[2]));
+
+    auto* p_scene_widget = new SceneWidget(&wnd, std::make_unique<UiController>(p_graph, p_topology, p_description, p_clusterization));
 
     {
         auto* p_scene_and_panel = new QWidget;

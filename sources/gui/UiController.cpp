@@ -7,10 +7,14 @@
 #include "../Libraries/GraphClusterization/RandomClusterization.h"
 #include "../Libraries/GraphClusterization/GreedyClusterization.h"
 
+#include "../Libraries/GraphsIO/GraphIO.h"
+
 #include <iostream>
 #include <map>
 #include <iterator>
 #include <algorithm>
+#include <fstream>
+#include <string>
 
 namespace
 {
@@ -88,17 +92,25 @@ namespace
         }
         throw std::logic_error("Invalid input");
     }
+
+    void _WriteClusterizationToFile(const std::string& i_file_name, const GraphClusterization::TClusterMap& i_clusters)
+    {
+        std::ofstream file_stream(i_file_name);
+        GraphsIO::WriteClusterizationToStream(i_clusters, file_stream);
+    }
+
 }
 
 UiController::UiController(
     TGraphPtr ip_graph,
     TTopologyPtr ip_topology,
-    TDescriptionPtr ip_description)
+    TDescriptionPtr ip_description,
+    TClusterizationsPtr ip_clusterizations)
     : mp_graph(ip_graph)
     , mp_description(ip_description)
 
 {
-    _GenerateClusterizations();
+    _GenerateClusterizations(ip_clusterizations);
 }
 
 UiController::~UiController()
@@ -146,7 +158,7 @@ double UiController::GetPointRadius() const
     return _GetMapElementCorrespondingToRange(m_zoom_to_point_radius, zoom_factor_10);
 }
 
-void UiController::_GenerateClusterizations()
+void UiController::_GenerateClusterizations(TClusterizationsPtr ip_clusterizations)
 {
     m_zoom_to_point_radius = 
     {
@@ -161,9 +173,9 @@ void UiController::_GenerateClusterizations()
     
     const std::map<size_t, size_t> g_cluster_sizes = { 
         {1, base_graph_size },
-        {3, base_graph_size / 75},
-        {5, base_graph_size / 1000 },
-        {8, base_graph_size / 7500},
+        {3, std::max(size_t{1}, base_graph_size / 75)},
+        {5, std::max(size_t{1}, base_graph_size / 1000) },
+        {8, std::max(size_t{1}, base_graph_size / 7500)},
         //{10, base_graph_size / 25000 },
         //{15, base_graph_size / 75000},
         //{20, base_graph_size / 256}
@@ -175,10 +187,24 @@ void UiController::_GenerateClusterizations()
     m_clusterization.begin()->second->mp_graph = mp_graph;
     m_clusterization.begin()->second->mp_description = mp_description;
 
+    size_t current_clusterization = 0;
+
     for (auto it = ++m_clusterization.begin(); it != m_clusterization.end(); ++it)
     {
         auto number_of_vertices = g_cluster_sizes.at(it->first);
-        it->second->mp_clusterization = GraphClusterization::CreateGreedyClusterization(*std::prev(it)->second->mp_graph.get(), number_of_vertices);
+        
+        if (!ip_clusterizations)
+        {
+            it->second->mp_clusterization = GraphClusterization::CreateGreedyClusterization(*std::prev(it)->second->mp_graph.get(), number_of_vertices);
+            std::string fname = "cl_" + std::to_string(current_clusterization) + ".csv";
+            _WriteClusterizationToFile(fname, it->second->mp_clusterization->GetClusterMap());
+        }
+        else
+        {
+            it->second->mp_clusterization = std::make_unique<GraphClusterization::Clusterization>((*ip_clusterizations)[current_clusterization], *std::prev(it)->second->mp_graph.get());
+        }
+        ++current_clusterization;
+
         it->second->mp_graph = it->second->mp_clusterization->GetClusterGraph();
         it->second->mp_description = std::make_unique<TGraphDescription>();
     }

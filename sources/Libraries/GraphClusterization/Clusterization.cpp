@@ -48,3 +48,8 @@ TClusterId Clusterization::GetClusterIdForVertex(const Graphs::Graph::TVertex& i
 {
     return m_cluster_map.at(i_vertex);
 }
+
+const TClusterMap& Clusterization::GetClusterMap() const
+{
+    return m_cluster_map;
+}
