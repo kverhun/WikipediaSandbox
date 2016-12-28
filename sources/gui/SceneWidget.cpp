@@ -171,7 +171,7 @@ public:
         for (const auto& c : { m_picked_vertexes, m_highlighted_vertexes })
             for (const auto& v : c)
             {
-                std::string description = "---";
+                std::string description = "";
                 // temporary check for not written descriptions (due to enc oding problems)
                 try
                 {
@@ -357,6 +357,9 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
             std::cout << "points_to_draw.size(): " << points_to_draw.size() << std::endl;
         }
 
+        auto highlighted_segments = i_scene.GetHighlightedSegments();
+        draw_segments_on_screen(highlighted_segments, g_highlighted_edge_color);
+
         auto selected_points_to_draw = Geometry::FilterPointsByBoundingBox(i_scene.GetPickedPoints(), m_current_region);
         if (!selected_points_to_draw.empty())
             draw_points_on_screen(selected_points_to_draw, g_picked_node_color, point_radius);
@@ -364,9 +367,6 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
         auto highlighted_points_to_draw = Geometry::FilterPointsByBoundingBox(i_scene.GetHighlightedPoints(), m_current_region);
         if (!highlighted_points_to_draw.empty())
             draw_points_on_screen(highlighted_points_to_draw, g_adjacent_node_color, point_radius);
-
-        auto highlighted_segments = i_scene.GetHighlightedSegments();
-        draw_segments_on_screen(highlighted_segments, g_highlighted_edge_color);
 
         auto draw_text_near_point = [this](const Point2d& i_point, const QString& i_str, QColor i_color)
         {
@@ -398,7 +398,7 @@ void SceneWidget::wheelEvent(QWheelEvent* ip_event)
     auto fracs = Geometry::GetRegionsFraction(m_current_region, mp_scene->GetBoundingBox());
     auto visible_x_frac = fracs.first;
     auto visible_y_frac = fracs.second;
-    if ((std::min(visible_x_frac, visible_y_frac) <= 0.025 && ip_event->delta() > 0) || (std::max(visible_x_frac, visible_y_frac) >= 2. && ip_event->delta() < 0))
+    if ((std::min(visible_x_frac, visible_y_frac) <= 0.001 && ip_event->delta() > 0) || (std::max(visible_x_frac, visible_y_frac) >= 2. && ip_event->delta() < 0))
     {
         std::cout << "x frac: " << visible_x_frac << "; y_frac: " << visible_y_frac << std::endl;
         std::cout << "Min/max zoom reached" << std::endl;

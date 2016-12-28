@@ -83,6 +83,9 @@ namespace
     template<typename K, typename V>
     const V& _GetMapElementCorrespondingToRange(const std::map<K, V>& i_map, const K& i_key)
     {
+        if (i_key < i_map.begin()->first)
+            return i_map.begin()->second;
+
         for (auto it = i_map.begin(); it != i_map.end(); ++it)
         {
             auto next_it = std::next(it);
