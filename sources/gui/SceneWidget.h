@@ -27,6 +27,9 @@ public:
 
     void SetDrawEdges(bool i_draw);
 
+    const UiController& GetUiController() const;
+
+    void SelectVertexInBaseGraph(const Graphs::Graph::TVertex& i_vertex);
 private:
     void paintEvent(QPaintEvent* ip_event) override;
     void wheelEvent(QWheelEvent* ip_event) override;

@@ -288,6 +288,19 @@ void SceneWidget::SetDrawEdges(bool i_draw)
     update();
 }
 
+const UiController& SceneWidget::GetUiController() const
+{
+    return *mp_controller.get();
+}
+
+void SceneWidget::SelectVertexInBaseGraph(const Graphs::Graph::TVertex& i_vertex)
+{
+    mp_scene_base_graph->SetPickedVertices({i_vertex});
+    if (mp_controller->IsCurrentGraphBase())
+        mp_scene->SetPickedVertices({i_vertex});
+    update();
+}
+
 void SceneWidget::paintEvent(QPaintEvent* ip_event)
 {
 

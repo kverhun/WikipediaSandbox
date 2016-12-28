@@ -15,6 +15,8 @@
 #include <QCheckBox>
 #include <QString>
 #include <QDesktopWidget>
+#include <QLineEdit>
+#include <QLabel>
 
 namespace
 {
@@ -100,6 +102,7 @@ int main(int i_argc, char** i_argv)
         auto* p_right_panel_widget = new QWidget;
 
         auto* p_right_panel = new QVBoxLayout;
+        p_right_panel->addStretch();
         auto* p_checkbox_draw_edges = new QCheckBox;
         p_checkbox_draw_edges->setText("Draw links always");
         p_scene_widget->SetDrawEdges(p_checkbox_draw_edges->isChecked());
@@ -108,6 +111,42 @@ int main(int i_argc, char** i_argv)
             p_scene_widget->SetDrawEdges(p_checkbox_draw_edges->isChecked());
         });
         p_right_panel->addWidget(p_checkbox_draw_edges);
+
+        QLineEdit* p_edit_prefix = new QLineEdit;
+        p_right_panel->addWidget(new QLabel("Search by prefix"));
+        p_right_panel->addWidget(p_edit_prefix);
+        QObject::connect(p_edit_prefix, &QLineEdit::editingFinished, [p_scene_widget, p_edit_prefix]()
+        {
+            try
+            {
+                auto text = p_edit_prefix->text();
+                if (text.isEmpty())
+                    return;
+                auto vertex = p_scene_widget->GetUiController().GetNodeByTextPrefix(text.toStdString());
+                p_scene_widget->SelectVertexInBaseGraph(vertex);
+            }
+            catch(...)
+            { }
+        });
+
+        QLineEdit* p_edit_full_match = new QLineEdit;
+        p_right_panel->addWidget(new QLabel("Search by full match"));
+        p_right_panel->addWidget(p_edit_full_match);
+        QObject::connect(p_edit_full_match, &QLineEdit::editingFinished, [p_scene_widget, p_edit_full_match]()
+        {
+            try
+            {
+                auto text = p_edit_full_match->text();
+                if (text.isEmpty())
+                    return;
+                auto vertex = p_scene_widget->GetUiController().GetNodeByFullMatch(text.toStdString());
+                p_scene_widget->SelectVertexInBaseGraph(vertex);
+            }
+            catch (...)
+            {
+            }
+        });
+
         p_right_panel_widget->setLayout(p_right_panel);
 
         p_hor_layout->addWidget(p_right_panel_widget);

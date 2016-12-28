@@ -46,6 +46,9 @@ public:
 
     bool IsCurrentGraphBase() const;
 
+    const Graphs::Graph::TVertex& GetNodeByTextPrefix(const std::string& i_prefix) const;
+    const Graphs::Graph::TVertex& GetNodeByFullMatch(const std::string& i_title) const;
+
 private:
     void _GenerateClusterizations(TClusterizationsPtr ip_clusterizations);
     struct _GraphInfo

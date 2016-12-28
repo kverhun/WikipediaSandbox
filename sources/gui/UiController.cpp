@@ -16,6 +16,8 @@
 #include <fstream>
 #include <string>
 
+#include <QString>
+
 namespace
 {
     using Geometry::Point2d;
@@ -260,4 +262,24 @@ const UiController::_GraphInfo& UiController::_GetAppropriateGraph(double i_zoom
 {
     size_t zoom_factor_10 = i_zoom_factor * 10;
     return *_GetMapElementCorrespondingToRange(m_clusterization, zoom_factor_10).get();
+}
+
+const Graphs::Graph::TVertex& UiController::GetNodeByTextPrefix(const std::string& i_prefix) const
+{
+    for (const auto& e : GetBaseGraphDescription())
+    {
+        if (e.second.find(i_prefix) == 0)
+            return e.first;
+    }
+    throw std::logic_error("No such node");
+}
+
+const Graphs::Graph::TVertex& UiController::GetNodeByFullMatch(const std::string& i_title) const
+{
+    for (const auto& e : GetBaseGraphDescription())
+    {
+        if (int x = QString::compare(QString::fromStdString(i_title), QString::fromStdString(e.second), Qt::CaseInsensitive) == 0)
+            return e.first;
+    }
+    throw std::logic_error("No such node");
 }
