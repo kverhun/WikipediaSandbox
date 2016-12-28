@@ -20,9 +20,9 @@ namespace
 {
     using Geometry::Point2d;
 
-    const int g_xmin = -4000000;
+    const int g_xmin = -6000000;
     const int g_ymin = g_xmin;
-    const int g_xmax = 4000000;
+    const int g_xmax = 6000000;
     const int g_ymax = g_xmax;
 
     const size_t g_number_of_clusters = 50;
@@ -162,20 +162,20 @@ void UiController::_GenerateClusterizations(TClusterizationsPtr ip_clusterizatio
 {
     m_zoom_to_point_radius = 
     {
-        {1, 5000}, {3, 25000}, {5, 50000}, {8, 100000}//, {10, 250000}//, {15, 500000}//, {20, 375000}
+        {1, 5000}, {2, 25000}, {5, 75000}, {8, 200000}//, {10, 250000}//, {15, 500000}//, {20, 375000}
     };
     std::map<size_t, size_t> g_cluster_dims =
     {
-        { 1, 5000 },{ 3, 100000 },{ 5, 500000 },{ 8, 1000000 }//,{ 10, 1000000 }//, {15, 2000000}//, {20, 10000000 }
+        { 1, 5000 },{ 2, 500000 },{ 5, 750000 },{ 8, 1000000 }//,{ 10, 1000000 }//, {15, 2000000}//, {20, 10000000 }
     };
 
     auto base_graph_size = mp_graph->GetVertices().size();
     
     const std::map<size_t, size_t> g_cluster_sizes = { 
         {1, base_graph_size },
-        {3, std::max(size_t{1}, base_graph_size / 75)},
-        {5, std::max(size_t{1}, base_graph_size / 1000) },
-        {8, std::max(size_t{1}, base_graph_size / 7500)},
+        {2, 10000},
+        {5, 1000 },
+        {8, 50},
         //{10, base_graph_size / 25000 },
         //{15, base_graph_size / 75000},
         //{20, base_graph_size / 256}
