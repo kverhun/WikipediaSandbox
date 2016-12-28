@@ -53,35 +53,49 @@ namespace
     const Graph::TVertex g_invalid_vertex = static_cast<Graph::TVertex>(-1);
 }
 
+//std::function<const Graph&(const UiController&)> m_graph_getter;
+//std::function<const Geometry::ITopology&(const UiController&)> m_topology_getter;
+//std::function<const TGraphDescription&(const UiController&)> m_description_getter;
+//std::function<double(const UiController&)> m_point_radius_getter;
+
 class SceneWidget::_Scene
 {
 public:
-    _Scene(const UiController& i_controller)
+    _Scene(const UiController& i_controller,
+        std::function<const Graph&(const UiController&)> i_graph_getter,
+        std::function<const Geometry::ITopology&(const UiController&)> i_topology_getter,
+        std::function<const TGraphDescription&(const UiController&)> i_description_getter,
+        std::function<double(const UiController&)> i_point_radius_getter
+        )
         : m_controller(i_controller)
+        , m_graph_getter(i_graph_getter)
+        , m_topology_getter(i_topology_getter)
+        , m_description_getter(i_description_getter)
+        , m_point_radius_getter(i_point_radius_getter)
     { }
 
     const std::vector<Geometry::Point2d>& GetPoints() const
     {
-        return m_controller.GetTopologyPoints();
+        return m_topology_getter(m_controller).GetPointList();
     }
 
     const Geometry::ITopology& GetTopology() const
     {
-        return m_controller.GetTopology();
+        return m_topology_getter(m_controller);
     }
 
     std::vector<std::pair<Point2d, Point2d>> GetSegments(const Geometry::Rectangle2d& i_rectangle) const
     {
         std::vector<std::pair<Point2d, Point2d>> segments;
 
-        auto points_in_rectangle = m_controller.GetTopology().GetPointsInRectangle(i_rectangle);
+        auto points_in_rectangle = m_topology_getter(m_controller).GetPointsInRectangle(i_rectangle);
 
         for (const auto& pt : points_in_rectangle)
         {
-            for (const auto& edge : m_controller.GetGraph().GetEdgesFromVertex(pt.first))
+            for (const auto& edge : m_graph_getter(m_controller).GetEdgesFromVertex(pt.first))
             {
                 auto pt_from = pt.second;
-                auto pt_to = m_controller.GetTopology().GetPoints().find(edge.second)->second;
+                auto pt_to = m_topology_getter(m_controller).GetPoints().find(edge.second)->second;
                 if (i_rectangle.DoesContainPoint(pt_to))
                     segments.emplace_back(pt_from, pt_to);
             }
@@ -103,7 +117,7 @@ public:
 
         if (!m_picked_vertexes.empty())
         { 
-            m_highlighted_edges = m_controller.GetGraph().GetEdgesFromVertex(m_picked_vertexes.front());
+            m_highlighted_edges = m_graph_getter(m_controller).GetEdgesFromVertex(m_picked_vertexes.front());
             for (const auto& e : m_highlighted_edges)
                 m_highlighted_vertexes.push_back(e.second);
         }
@@ -122,6 +136,11 @@ public:
         }
     }
 
+    const Graph::TVertices& GetPickedVertices() const
+    {
+        return m_picked_vertexes;
+    }
+
     const std::vector<Geometry::Point2d> GetPickedPoints() const
     {
         return _GetPointsForVertices(m_picked_vertexes);
@@ -138,10 +157,10 @@ public:
         if (m_picked_vertexes.empty())
             return highlighted_segments;
 
-        auto point_from = m_controller.GetTopology().GetPoints().at(m_picked_vertexes.front());
+        auto point_from = m_topology_getter(m_controller).GetPoints().at(m_picked_vertexes.front());
 
         for (const auto& e : m_highlighted_edges)
-            highlighted_segments.emplace_back(point_from, m_controller.GetTopology().GetPoints().at(e.second));
+            highlighted_segments.emplace_back(point_from, m_topology_getter(m_controller).GetPoints().at(e.second));
 
         return highlighted_segments;
     }
@@ -156,11 +175,11 @@ public:
                 // temporary check for not written descriptions (due to enc oding problems)
                 try
                 {
-                    description = m_controller.GetGraphDescription().at(v);
+                    description = m_description_getter(m_controller).at(v);
                 }
                 catch (...)
                 { }
-                res.emplace_back(m_controller.GetTopology().GetPoints().at(v), description);
+                res.emplace_back(m_topology_getter(m_controller).GetPoints().at(v), description);
             }
         return res;
     }
@@ -177,10 +196,15 @@ public:
         std::string description = "";
         try
         {
-            description = m_controller.GetGraphDescription().at(i_vertex);
+            description = m_description_getter(m_controller).at(i_vertex);
         }
         catch(...){}
         return description;
+    }
+
+    double GetPointRadius() const
+    {
+        return m_point_radius_getter(m_controller);
     }
 
 private:
@@ -188,11 +212,17 @@ private:
     {
         std::vector<Geometry::Point2d> points;
         for (auto v : i_vertices)
-            points.push_back(m_controller.GetTopology().GetPoints().at(v));
+            points.push_back(m_topology_getter(m_controller).GetPoints().at(v));
         return points;
     }
 
 private:
+
+    std::function<const Graph&(const UiController&)> m_graph_getter;
+    std::function<const Geometry::ITopology&(const UiController&)> m_topology_getter;
+    std::function<const TGraphDescription&(const UiController&)> m_description_getter;
+    std::function<double(const UiController&)> m_point_radius_getter;
+
     const UiController& m_controller;
 
     Graph::TVertices m_picked_vertexes;
@@ -229,7 +259,16 @@ private:
 SceneWidget::SceneWidget(QWidget* ip_parent, std::unique_ptr<UiController> ip_controller)
     : QWidget(ip_parent)
     , mp_controller(std::move(ip_controller))
-    , mp_scene(std::make_unique<_Scene>(*mp_controller.get()))
+    , mp_scene(std::make_unique<_Scene>(*mp_controller.get(), 
+        [](const UiController& i_c) -> const Graphs::Graph& {return i_c.GetGraph(); },
+        [](const UiController& i_c) -> const Geometry::ITopology& {return i_c.GetTopology(); },
+        [](const UiController& i_c) -> const TGraphDescription& {return i_c.GetGraphDescription(); },
+        [](const UiController& i_c) {return i_c.GetPointRadius(); }))
+    , mp_scene_base_graph(std::make_unique<_Scene>(*mp_controller.get(),
+        [](const UiController& i_c) -> const Graphs::Graph& {return i_c.GetBaseGraph(); },
+        [](const UiController& i_c) -> const Geometry::ITopology& { return i_c.GetBaseTopology(); },
+        [](const UiController& i_c) -> const TGraphDescription& {return i_c.GetBaseGraphDescription(); },
+        [](const UiController& i_c) {return i_c.GetBasePointRadius(); }))
     , m_current_region(mp_scene->GetBoundingBox())
 {
     setStyleSheet(
@@ -280,54 +319,63 @@ void SceneWidget::paintEvent(QPaintEvent* ip_event)
             painter.drawLine(segment.first, segment.second);
     };
 
-    if (m_draw_edges)
-        draw_segments_on_screen(mp_scene->GetSegments(Geometry::Rectangle2d(m_current_region.first, m_current_region.second)), g_edge_color);
-
-    auto radius = mp_controller->GetPointRadius();
-    Point2d radius_world{ radius, 0 };
-    auto radius_screen = _TransformPointFromWorldToWidget(radius_world) - _TransformPointFromWorldToWidget(Point2d{0,0});
-
-    const size_t point_radius = std::max(radius_screen.x(), radius_screen.y());
-
-
-    auto points_to_draw = mp_scene->GetTopology().GetPointsInRectangle(Geometry::Rectangle2d(m_current_region.first, m_current_region.second));
-    std::vector<Geometry::Point2d> points_to_draw_vector;
-    points_to_draw_vector.reserve(points_to_draw.size());
-    for (const auto& pt : points_to_draw)
-        points_to_draw_vector.push_back(pt.second);
-    
-    if (!points_to_draw.empty())
-        draw_points_on_screen(points_to_draw_vector, g_nodes_color, point_radius);
-
-    std::cout << "points_to_draw.size(): " << points_to_draw.size() << std::endl;
-
-    auto selected_points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetPickedPoints(), m_current_region);
-    if (!selected_points_to_draw.empty())
-        draw_points_on_screen(selected_points_to_draw, g_picked_node_color, point_radius);
-
-    auto highlighted_points_to_draw = Geometry::FilterPointsByBoundingBox(mp_scene->GetHighlightedPoints(), m_current_region);
-    if (!highlighted_points_to_draw.empty())
-        draw_points_on_screen(highlighted_points_to_draw, g_adjacent_node_color, point_radius);
-
-    auto highlighted_segments = mp_scene->GetHighlightedSegments();
-    draw_segments_on_screen(highlighted_segments, g_highlighted_edge_color);
-
-    auto draw_text_near_point = [this](const Point2d& i_point, const QString& i_str, QColor i_color)
+    auto draw_scene = [this, draw_points_on_screen, draw_segments_on_screen](const _Scene& i_scene, bool i_draw_only_picked = false)
     {
-        QPainter painter(this);
-        auto point_screen = _TransformPointFromWorldToWidget(i_point);
-        QPoint text_point(point_screen.x() - 2 * g_highlighted_point_radius, point_screen.y() - 2 * g_highlighted_point_radius);
+        if (m_draw_edges)
+            draw_segments_on_screen(i_scene.GetSegments(Geometry::Rectangle2d(m_current_region.first, m_current_region.second)), g_edge_color);
 
-        QFont font("Times", 15);
-        font.setWeight(QFont::Bold);
-        painter.setPen(i_color);
-        painter.setFont(font);
-        painter.drawText(text_point, i_str);
+        auto radius = i_scene.GetPointRadius();
+        Point2d radius_world{ radius, 0 };
+        auto radius_screen = _TransformPointFromWorldToWidget(radius_world) - _TransformPointFromWorldToWidget(Point2d{ 0,0 });
+
+        const size_t point_radius = std::max(3, std::max(radius_screen.x(), radius_screen.y()));
+
+        if (!i_draw_only_picked)
+        {
+            auto points_to_draw = i_scene.GetTopology().GetPointsInRectangle(Geometry::Rectangle2d(m_current_region.first, m_current_region.second));
+            std::vector<Geometry::Point2d> points_to_draw_vector;
+            points_to_draw_vector.reserve(points_to_draw.size());
+            for (const auto& pt : points_to_draw)
+                points_to_draw_vector.push_back(pt.second);
+
+            if (!points_to_draw.empty())
+                draw_points_on_screen(points_to_draw_vector, g_nodes_color, point_radius);
+
+            std::cout << "points_to_draw.size(): " << points_to_draw.size() << std::endl;
+        }
+
+        auto selected_points_to_draw = Geometry::FilterPointsByBoundingBox(i_scene.GetPickedPoints(), m_current_region);
+        if (!selected_points_to_draw.empty())
+            draw_points_on_screen(selected_points_to_draw, g_picked_node_color, point_radius);
+
+        auto highlighted_points_to_draw = Geometry::FilterPointsByBoundingBox(i_scene.GetHighlightedPoints(), m_current_region);
+        if (!highlighted_points_to_draw.empty())
+            draw_points_on_screen(highlighted_points_to_draw, g_adjacent_node_color, point_radius);
+
+        auto highlighted_segments = i_scene.GetHighlightedSegments();
+        draw_segments_on_screen(highlighted_segments, g_highlighted_edge_color);
+
+        auto draw_text_near_point = [this](const Point2d& i_point, const QString& i_str, QColor i_color)
+        {
+            QPainter painter(this);
+            auto point_screen = _TransformPointFromWorldToWidget(i_point);
+            QPoint text_point(point_screen.x() - 2 * g_highlighted_point_radius, point_screen.y() - 2 * g_highlighted_point_radius);
+
+            QFont font("Times", 15);
+            font.setWeight(QFont::Bold);
+            painter.setPen(i_color);
+            painter.setFont(font);
+            painter.drawText(text_point, i_str);
+        };
+
+        auto titles_to_draw = i_scene.GetTitlesToDraw();
+        for (const auto& title : titles_to_draw)
+            draw_text_near_point(title.first, QString::fromStdString(title.second), g_text_color);
     };
 
-    auto titles_to_draw = mp_scene->GetTitlesToDraw();
-    for (const auto& title : titles_to_draw)
-        draw_text_near_point(title.first, QString::fromStdString(title.second), g_text_color);
+    draw_scene(*mp_scene.get());
+    if (!mp_controller->IsCurrentGraphBase())
+        draw_scene(*mp_scene_base_graph.get(), true);
 }
 
 void SceneWidget::wheelEvent(QWheelEvent* ip_event)
@@ -364,9 +412,18 @@ void SceneWidget::mouseReleaseEvent(QMouseEvent* ip_event)
     auto picked_vertex = _GetVertexUnderCursor(ip_event->pos());
 
     if (picked_vertex != g_invalid_vertex)
+    {
         mp_scene->SetPickedVertices({ picked_vertex });
+        if (mp_controller->IsCurrentGraphBase())
+            mp_scene_base_graph->SetPickedVertices({picked_vertex});
+        else
+            mp_scene_base_graph->SetPickedVertices({});
+    }
     else
+    {
         mp_scene->SetPickedVertices({});
+        mp_scene_base_graph->SetPickedVertices({});
+    }
     
     update();
 }
@@ -475,7 +532,12 @@ void SceneWidget::_ExpandCurrentRegion(double i_dx, double i_dy)
     m_current_region.first.SetY(m_current_region.first.GetY() - i_dy / 2);
     m_current_region.second.SetY(m_current_region.second.GetY() + i_dy / 2);
 
-    mp_controller->SetVisibleRegion(m_current_region);
+    if (mp_controller->SetVisibleRegion(m_current_region))
+    {
+        mp_scene->SetPickedVertices({});
+        if (mp_controller->IsCurrentGraphBase())
+            mp_scene->SetPickedVertices(mp_scene_base_graph->GetPickedVertices());
+    }
 }
 
 void SceneWidget::_ShrinkCurrentRegion(double i_dx, double i_dy)
@@ -485,7 +547,12 @@ void SceneWidget::_ShrinkCurrentRegion(double i_dx, double i_dy)
     m_current_region.first.SetY(m_current_region.first.GetY() + i_dy / 2);
     m_current_region.second.SetY(m_current_region.second.GetY() - i_dy / 2);
 
-    mp_controller->SetVisibleRegion(m_current_region);
+    if (mp_controller->SetVisibleRegion(m_current_region))
+    {
+        mp_scene->SetPickedVertices({});
+        if (mp_controller->IsCurrentGraphBase())
+            mp_scene->SetPickedVertices(mp_scene_base_graph->GetPickedVertices());
+    }
 }
 
 void SceneWidget::_ZoomIn()

@@ -138,18 +138,57 @@ const std::vector<Geometry::Point2d>& UiController::GetTopologyPoints() const
     return _GetAppropriateGraph(m_current_zoom_factor).mp_topology->GetPointList();
 }
 
+const Graphs::Graph& UiController::GetBaseGraph() const
+{
+    return *m_clusterization.begin()->second->mp_graph.get();
+}
+
+const Geometry::ITopology& UiController::GetBaseTopology() const
+{
+    return *m_clusterization.begin()->second->mp_topology.get();
+}
+
+const TGraphDescription& UiController::GetBaseGraphDescription() const
+{
+    return *m_clusterization.begin()->second->mp_description.get();
+}
+
+double UiController::GetBasePointRadius() const
+{
+    return m_zoom_to_point_radius.begin()->second;
+}
+
+
 const std::pair<Geometry::Point2d, Geometry::Point2d>& UiController::GetTopologyBoundingBox() const
 {
     static auto box = Geometry::GetPointsBoundaries(m_clusterization.cbegin()->second->mp_topology->GetPointList());
     return box;
 }
 
-void UiController::SetVisibleRegion(const std::pair<Geometry::Point2d, Geometry::Point2d>& i_region)
+bool UiController::SetVisibleRegion(const std::pair<Geometry::Point2d, Geometry::Point2d>& i_region)
 {
+
     auto fracs = Geometry::GetRegionsFraction(i_region, GetTopologyBoundingBox());
-    m_current_zoom_factor = std::max(fracs.first, fracs.second);
+    double new_zoom_factor = std::max(fracs.first, fracs.second);
+    
+    const auto* p_graph_before = &_GetAppropriateGraph(m_current_zoom_factor);
+    const auto* p_new_graph = &_GetAppropriateGraph(new_zoom_factor);
+
+    m_current_zoom_factor = new_zoom_factor;
 
     std::cout << "Current zoom: " << m_current_zoom_factor << std::endl;
+
+    if (p_new_graph == p_graph_before)
+        return false;
+    else
+        return true;
+}
+
+bool UiController::IsCurrentGraphBase() const
+{
+    const auto* p_base_graph = &GetBaseGraph();
+    const auto* p_current_graph = &GetGraph();
+    return p_base_graph == p_current_graph;
 }
 
 double UiController::GetPointRadius() const

@@ -17,6 +17,8 @@ namespace Graphs
     public:
         Graph(const std::vector<TVertex>& i_vertices, const std::vector<TEdge>& i_edges);
 
+        Graph(const Graph&) = delete;
+
         const TVertices& GetVertices() const;
         const TEdges&    GetEdges()    const;
 

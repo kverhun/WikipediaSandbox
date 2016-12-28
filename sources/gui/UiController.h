@@ -31,13 +31,20 @@ public:
     const Graphs::Graph& GetGraph() const;
     const Geometry::ITopology& GetTopology() const;
     const TGraphDescription& GetGraphDescription() const;
+    double GetPointRadius() const;
+
+    const Graphs::Graph& GetBaseGraph() const;
+    const Geometry::ITopology& GetBaseTopology() const;
+    const TGraphDescription& GetBaseGraphDescription() const;
+    double GetBasePointRadius() const;
+    const std::vector<Geometry::Point2d>& GetBaseTopologyPoints() const;
 
     const std::vector<Geometry::Point2d>& GetTopologyPoints() const;
     const std::pair<Geometry::Point2d, Geometry::Point2d>& GetTopologyBoundingBox() const;
 
-    void SetVisibleRegion(const std::pair<Geometry::Point2d, Geometry::Point2d>& i_region);
+    bool SetVisibleRegion(const std::pair<Geometry::Point2d, Geometry::Point2d>& i_region);
 
-    double GetPointRadius() const;
+    bool IsCurrentGraphBase() const;
 
 private:
     void _GenerateClusterizations(TClusterizationsPtr ip_clusterizations);

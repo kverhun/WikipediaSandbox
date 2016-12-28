@@ -50,6 +50,7 @@ private:
 
     class _Scene;
     std::unique_ptr<_Scene> mp_scene;
+    std::unique_ptr<_Scene> mp_scene_base_graph;
 
     class _Panner;
     std::unique_ptr<_Panner> mp_panner;
