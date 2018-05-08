@@ -6,3 +6,5 @@ Supports view panning and zooming.
 
 When zoomed out nodes are clusterized.
 
+![Screenshot](screenshot.png)
+
