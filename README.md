@@ -1,6 +1,6 @@
 # Wikipedia visualization application
 
-Viusalized ~2-millon-nodes Wikipedia graph on 2d-plane.
+Viusalized ~2-million-nodes Wikipedia graph on 2d-plane.
 
 Supports view panning and zooming.
 
